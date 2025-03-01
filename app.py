@@ -1,10 +1,28 @@
-from flask import Flask, render_template, request, url_for
+import os
+import markdown
+from dotenv import load_dotenv
+load_dotenv()
+
+from google import genai
+
+# Initialize Gemini client using API key from the .env file
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=gemini_api_key)
+
+from flask import Flask, render_template, request, jsonify, url_for
 import requests
 from datetime import datetime
 import pytz
 
 app = Flask(__name__)
 
+def convert_markdown(md_text):
+    """
+    Convert Markdown text to HTML.
+    """
+    return markdown.markdown(md_text)
+
+# (Existing functions for weather and coordinates remain unchanged)
 def compute_center(coordinates):
     lats = [coord["lat"] for coord in coordinates]
     lons = [coord["lon"] for coord in coordinates]
@@ -24,8 +42,7 @@ def get_weather(latitude, longitude, forecast_type="hourly"):
         params["hourly"] = (
             "temperature_2m,relative_humidity_2m,dew_point_2m,"
             "precipitation,precipitation_probability,rain,showers,snowfall,weathercode,"
-            "soil_temperature_0cm,soil_temperature_6cm,soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,"
-            "wind_speed_10m,wind_gusts_10m"
+            "soil_temperature_0cm,soil_moisture_0_to_1cm,wind_speed_10m,wind_gusts_10m"
         )
     elif forecast_type == "daily":
         params["daily"] = (
@@ -73,10 +90,10 @@ def dashboard():
     ]
 
     north_dakota_coords = [
-        {"lat": 46.8688889, "lon": -97.2844444},  # 46°52'08"N, 97°17'04"W
-        {"lat": 46.8686111, "lon": -97.2741667},  # 46°52'07"N, 97°16'27"W
-        {"lat": 46.8750000, "lon": -97.2741667},  # 46°52'30"N, 97°16'27"W
-        {"lat": 46.8750000, "lon": -97.2844444}   # 46°52'30"N, 97°17'04"W
+        {"lat": 46.8688889, "lon": -97.2844444},
+        {"lat": 46.8686111, "lon": -97.2741667},
+        {"lat": 46.8750000, "lon": -97.2741667},
+        {"lat": 46.8750000, "lon": -97.2844444}
     ]
     
     if request.method == "POST":
@@ -155,7 +172,6 @@ def dashboard():
         except Exception as e:
             error = str(e)
             
-    # Pass the current date/time to the template using "now"
     now = datetime.now()
     return render_template("dashboard.html",
                            forecast_data=forecast_data,
@@ -168,6 +184,28 @@ def dashboard():
 def chatbot():
     now = datetime.now()
     return render_template("chatbot.html", now=now)
+
+@app.route("/get_response", methods=["POST"])
+def get_response():
+    data = request.get_json()
+    user_message = data.get("message", "")
+    
+    prompt = f"""
+You are an expert agriculture specialist. Please provide a detailed, scientifically rigorous response to the following query using your deep knowledge in agriculture:
+{user_message}
+"""
+    try:
+        # Using Gemini API instead of OpenAI:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+        # Convert Markdown response to HTML so formatting is preserved
+        final_response = convert_markdown(response.text)
+    except Exception as e:
+        final_response = "Sorry, I encountered an error: " + str(e)
+    
+    return jsonify({"response": final_response})
 
 if __name__ == "__main__":
     app.run(debug=True)
