@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agriculture Weather Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>WinifyAI</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="form-section">
+            <form method="post">
+                <label for="forecast_type">Choose forecast type:</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="hourly" name="forecast_type" value="hourly" required
+                               {% if forecast_type == 'hourly' %} checked {% endif %}>
+                        <label for="hourly">Hourly Forecast (Next 24 Hours)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="daily" name="forecast_type" value="daily"
+                               {% if forecast_type == 'daily' %} checked {% endif %}>
+                        <label for="daily">Daily Forecast (Next 7 Days)</label>
+                    </div>
+                </div>
+                <button type="submit">Get Forecast</button>
+            </form>
+        </div>
+        
+        {% if error %}
+          <p class="error">{{ error }}</p>
+        {% endif %}
+        
+        {% if center_coords %}
+        <div class="coordinates-card">
+            <div class="coordinate-item">
+                <span>Latitude</span>
+                <p>{{ "%.6f"|format(center_coords[0]) }}</p>
+            </div>
+            <div class="coordinate-item">
+                <span>Longitude</span>
+                <p>{{ "%.6f"|format(center_coords[1]) }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if forecast_data %}
+          <div class="forecast-data">
+          {% if forecast_type == "hourly" %}
+          <h2>Hourly Forecast (Next 24 Hours)</h2>
+          <div class="table-container">
+              <table>
+                  <tr>
+                      <th>Time</th>
+                      <th>Temp (°C)</th>
+                      <th>RH (%)</th>
+                      <th>Dew Pt (°C)</th>
+                      <th>Prec (mm)</th>
+                      <th>P%</th>
+                      <th>Rain (mm)</th>
+                      <th>Showers (mm)</th>
+                      <th>Snow (mm)</th>
+                      <th>WCode</th>
+                      <th>Icon</th>
+                      <th>SoilT0 (°C)</th>
+                      <th>SoilT6 (°C)</th>
+                      <th>SoilM0</th>
+                      <th>SoilM1</th>
+                      <th>Wind (km/h)</th>
+                      <th>WGust (km/h)</th>
+                  </tr>
+                  {% for entry in forecast_data %}
+                  <tr>
+                      <td>{{ entry.time }}</td>
+                      <td>{{ entry.temperature }}</td>
+                      <td>{{ entry.relative_humidity }}</td>
+                      <td>{{ entry.dew_point }}</td>
+                      <td>{{ entry.precipitation }}</td>
+                      <td>{{ entry.precip_prob }}</td>
+                      <td>{{ entry.rain }}</td>
+                      <td>{{ entry.showers }}</td>
+                      <td>{{ entry.snowfall }}</td>
+                      <td>{{ entry.weathercode }}</td>
+                      <td>
+                        <img class="icon" src="{{ url_for('static', filename='icons/' ~ entry.weather_icon) }}" alt="Icon">
+                      </td>
+                      <td>{{ entry.soil_temperature_0 }}</td>
+                      <td>{{ entry.soil_temperature_6 }}</td>
+                      <td>{{ entry.soil_moisture_0 }}</td>
+                      <td>{{ entry.soil_moisture_1 }}</td>
+                      <td>{{ entry.wind_speed }}</td>
+                      <td>{{ entry.wind_gusts }}</td>
+                  </tr>
+                  {% endfor %}
+              </table>
+          </div>
+          {% elif forecast_type == "daily" %}
+          <h2>Daily Forecast (Next 7 Days)</h2>
+          <div class="table-container">
+              <table>
+                  <tr>
+                      <th>Date</th>
+                      <th>Max Temp (°C)</th>
+                      <th>Min Temp (°C)</th>
+                      <th>Precip (mm)</th>
+                      <th>Max Wind (km/h)</th>
+                      <th>UV Index</th>
+                  </tr>
+                  {% for entry in forecast_data %}
+                  <tr>
+                      <td>{{ entry.date }}</td>
+                      <td class="{% if entry.temp_max > 30 %}temp-high{% endif %}">{{ entry.temp_max }}</td>
+                      <td class="{% if entry.temp_min < 5 %}temp-low{% endif %}">{{ entry.temp_min }}</td>
+                      <td class="{% if entry.precipitation_sum > 10 %}precip-high{% endif %}">{{ entry.precipitation_sum }}</td>
+                      <td>{{ entry.wind_speed_max }}</td>
+                      <td>{{ entry.uv_index }}</td>
+                  </tr>
+                  {% endfor %}
+              </table>
+          </div>
+          {% endif %}
+          </div>
+        {% endif %}
+    </div>
+    
+    <footer>
+        <p>Agriculture Weather Dashboard &copy; {{ now.year }}</p>
+    </footer>
+</body>
+</html>
