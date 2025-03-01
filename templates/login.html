@@ -1,52 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinifyAI | Agricultural Weather Intelligence</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - WinifyAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center; /* Center horizontally */
+      align-items: center;     /* Center vertically */
+      height: 100vh;           /* Full height of the viewport */
+      margin: 0;
+    }
+
+    .login-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;  /* Reduced padding */
+      width: 100%;
+      max-width: 350px;  /* Reduced max-width */
+      text-align: center;
+    }
+
+    .login-container img {
+      height: 300px; /* Adjusted size */
+      width: auto;
+      margin-bottom: 40px; /* Increased margin-bottom */
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 20px; /* Added top margin to move it down a bit */
+    }
+
+    h2 {
+      color: #2c3e50;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      font-size: 14px;
+      text-align: left;
+      color: #7f8c8d;
+    }
+
+    input[type="text"], input[type="password"] {
+      padding: 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-size: 16px;
+      color: #2c3e50;
+    }
+
+    button {
+      padding: 12px;
+      border: none;
+      background-color: #3498db;
+      color: white;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .flashes {
+      list-style-type: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+
+    .flashes .error {
+      background-color: #e74c3c;
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .create-account-btn {
+      padding: 12px;
+      border: none;
+      background-color: #2ecc71;
+      color: white;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 15px; /* Space between the button and login button */
+    }
+
+    .create-account-btn:hover {
+      background-color: #27ae60;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
-    <header>
-        <div class="header-container">
-            <div class="logo-container">
-            <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
-            <div class="title-container">
-              <h1>WinifyAI</h1>
-              <span class="logo-tagline">Agricultural Intelligence</span>
-            </div>
-          </div>             
-            <nav>
-                <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
-                    <span class="nav-icon">🏠</span>
-                    <span>Home</span>
-                </a>
-                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
-                    <span>Weather Dashboard</span>
-                </a>
-                <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
-                    <span class="nav-icon">💬</span>
-                    <span>Chatbot</span>
-                </a>
-                <a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint == 'login' %}active{% endif %}">
-                    <span class="nav-icon">🔑</span>
-                    <span>Login</span>
-                </a>
-            </nav>
-        </div>
-    </header>
+<body>
+  <div class="login-container">
+    <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo">
+    <h2>Login</h2>
     
-    <main class="container mx-auto my-10 p-4">
-        <section class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-2">Welcome</h2>
-            <p class="text-gray-700">This is a modern template using HTML and Tailwind CSS.</p>
-        </section>
-    </main>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for message in messages %}
+            <li class="error">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
     
-    <footer class="bg-gray-800 text-white p-4 text-center">
-        <p> Agriculture Weather Dashboard &copy; 2025.</p>
-    </footer>
+    <form method="post">
+      <label for="username">Username:</label>
+      <input type="text" name="username" id="username" required>
+      <label for="password">Password:</label>
+      <input type="password" name="password" id="password" required>
+
+      <button type="submit">Login</button>
+
+            <!-- "Create an Account" button -->
+            <button type="button" class="create-account-btn">Create an Account</button>
+    </form>
+  </div>
 </body>
 </html>

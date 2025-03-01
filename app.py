@@ -9,21 +9,18 @@ from google import genai
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=gemini_api_key)
 
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify, url_for, redirect, session, flash
 import requests
 from datetime import datetime
 import pytz
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "your_default_secret_key")  # Set a secure secret key!
 
 def convert_markdown(md_text):
-    """
-    Convert Markdown text to HTML with additional extensions.
-    """
-    # Use extensions for better formatting
     return markdown.markdown(md_text, extensions=['tables', 'fenced_code', 'nl2br'])
 
-# (Existing functions for weather and coordinates remain unchanged)
+# Existing functions for weather and coordinates remain unchanged
 def compute_center(coordinates):
     lats = [coord["lat"] for coord in coordinates]
     lons = [coord["lon"] for coord in coordinates]
@@ -71,12 +68,53 @@ def map_weather_icon(weathercode):
     else:
         return "default.png"
 
+# ------------------------------
+# Login and Logout functionality
+# ------------------------------
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        # For demo purposes, we're using hard-coded credentials.
+        # In a real app, use a database and hashed passwords.
+        username = request.form.get("username")
+        password = request.form.get("password")
+        
+        if username == "admin" and password == "password":  
+            session["username"] = username
+            return redirect(url_for("home"))
+        else:
+            flash("Invalid credentials. Please try again.")
+            return redirect(url_for("login"))
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("username", None)
+    return redirect(url_for("login"))
+
+# ------------------------------
+# Protected Routes (Login Required)
+# ------------------------------
+
+def login_required(func):
+    """Decorator to check if the user is logged in."""
+    from functools import wraps
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if "username" not in session:
+            return redirect(url_for("login"))
+        return func(*args, **kwargs)
+    return decorated_view
+
 @app.route("/")
+@login_required
 def home():
     now = datetime.now()
-    return render_template("home.html", now=now)
+    return render_template("home.html", now=now, username=session.get("username"))
 
 @app.route("/weather", methods=["GET", "POST"])
+@login_required
 def dashboard():
     farm_name = None
     forecast_data = None
@@ -198,16 +236,13 @@ def dashboard():
 
 
 @app.route("/chatbot")
+@login_required
 def chatbot():
     now = datetime.now()
     return render_template("chatbot.html", now=now)
 
-
-@app.route("/login")
-def login():
-    return render_template("login.html")
-
 @app.route("/get_response", methods=["POST"])
+@login_required
 def get_response():
     data = request.get_json()
     user_message = data.get("message", "")
@@ -217,12 +252,10 @@ You are an expert agriculture specialist named Randy.
 {user_message}
 """
     try:
-        # Using Gemini API instead of OpenAI:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt
         )
-        # Convert Markdown response to HTML so formatting is preserved
         final_response = convert_markdown(response.text)
     except Exception as e:
         final_response = "Sorry, I encountered an error: " + str(e)
@@ -231,3 +264,4 @@ You are an expert agriculture specialist named Randy.
 
 if __name__ == "__main__":
     app.run(debug=True)
+
