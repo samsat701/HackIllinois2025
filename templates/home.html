@@ -11,9 +11,12 @@
     <header>
         <div class="header-container">
             <div class="logo-container">
-                <h1>WinifyAI</h1>
-                <span class="logo-tagline">Agricultural Intelligence</span>
-            </div>
+                <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+                <div class="title-container">
+                  <h1>WinifyAI</h1>
+                  <span class="logo-tagline">Agricultural Intelligence</span>
+                </div>
+              </div>              
             <nav>
                 <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
                     <span class="nav-icon">🏠</span>

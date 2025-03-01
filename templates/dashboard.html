@@ -1,156 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agriculture Weather Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Reference your existing stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agriculture Weather Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <header>
-        <div class="header-container">
-            <div class="logo-container">
-                <h1>WinifyAI</h1>
-                <span class="logo-tagline">Agricultural Intelligence</span>
-            </div>
-            <nav>
-                <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
-                    <span class="nav-icon">🏠</span>
-                    <span>Home</span>
-                </a>
-                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
-                    <span>Weather Dashboard</span>
-                </a>
-                <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
-                    <span class="nav-icon">💬</span>
-                    <span>Chatbot</span>
-                </a>
-            </nav>
+  <header>
+    <div class="header-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+        <div class="title-container">
+          <h1>WinifyAI</h1>
+          <span class="logo-tagline">Agricultural Intelligence</span>
         </div>
-    </header>
-    
-    
-    <div class="container">
-        <div class="form-section">
-            <form method="post">
-                <label for="forecast_type">Choose forecast type:</label>
-                <div class="radio-group">
-                    <div class="radio-option">
-                        <input type="radio" id="hourly" name="forecast_type" value="hourly" required
-                               {% if forecast_type == 'hourly' %} checked {% endif %}>
-                        <label for="hourly">Hourly Forecast (Next 24 Hours)</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="daily" name="forecast_type" value="daily"
-                               {% if forecast_type == 'daily' %} checked {% endif %}>
-                        <label for="daily">Daily Forecast (Next 7 Days)</label>
-                    </div>
-                </div>
-                <button type="submit">Get Forecast</button>
-            </form>
+      </div>
+      <nav>
+        <a href="{{ url_for('home') }}" class="nav-link">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="nav-link">
+          <span class="nav-icon">📊</span>
+          <span>Weather Dashboard</span>
+        </a>
+        <a href="{{ url_for('chatbot') }}" class="nav-link active">
+          <span class="nav-icon">💬</span>
+          <span>Chatbot</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+      <!-- Farm Selection Buttons -->
+      <div class="farm-selection">
+        <h2>Select Your Farm</h2>
+        <div class="farm-buttons">
+          <!-- Active Farms: They update a hidden field when clicked -->
+          <button type="button" class="farm-button {% if selected_farm=='illinois' %}selected{% endif %}" data-farm="illinois">
+            <img src="{{ url_for('static', filename='icons/farm1.jpg') }}" alt="Illinois Farm">
+            <span>Farm 1 - Illinois</span>
+          </button>
+          <button type="button" class="farm-button {% if selected_farm=='north_dakota' %}selected{% endif %}" data-farm="north_dakota">
+            <img src="{{ url_for('static', filename='icons/farm2.jpg') }}" alt="North Dakota Farm">
+            <span>Farm 2 - North Dakota</span>
+          </button>
+          <!-- Disabled Farms -->
+          <button type="button" class="farm-button disabled">
+            <img src="{{ url_for('static', filename='icons/farm3.jpg') }}" alt="Oregon Farm">
+            <span>Farm 3 - Oregon</span>
+          </button>
+          <button type="button" class="farm-button disabled">
+            <img src="{{ url_for('static', filename='icons/farm4.jpg') }}" alt="Maine Farm">
+            <span>Farm 4 - Maine</span>
+          </button>
         </div>
-        
-        {% if error %}
-          <p class="error">{{ error }}</p>
-        {% endif %}
-        
-        {% if center_coords %}
-        <div class="coordinates-card">
-            <div class="coordinate-item">
-                <span>Latitude</span>
-                <p>{{ "%.6f"|format(center_coords[0]) }}</p>
-            </div>
-            <div class="coordinate-item">
-                <span>Longitude</span>
-                <p>{{ "%.6f"|format(center_coords[1]) }}</p>
-            </div>
+      </div>
+      <!-- Hidden input to store the selected farm -->
+      <input type="hidden" name="farm" id="farm-input" value="{{ selected_farm or '' }}">
+
+      <!-- Forecast Type Section -->
+      <div class="form-section">
+        <label for="forecast_type">Choose forecast type:</label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" id="hourly" name="forecast_type" value="hourly" required
+                   {% if forecast_type == 'hourly' %} checked {% endif %}>
+            <label for="hourly">Hourly Forecast (Next 24 Hours)</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" id="daily" name="forecast_type" value="daily"
+                   {% if forecast_type == 'daily' %} checked {% endif %}>
+            <label for="daily">Daily Forecast (Next 7 Days)</label>
+          </div>
         </div>
-        {% endif %}
-        
-        {% if forecast_data %}
-          <div class="forecast-data">
-          {% if forecast_type == "hourly" %}
+        <button type="submit">Get Forecast</button>
+      </div>
+    </form>
+
+    {% if center_coords %}
+      <div class="coordinates-card">
+        <div class="coordinate-item">
+          <span>Latitude</span>
+          <p>{{ "%.6f"|format(center_coords[0]) }}</p>
+        </div>
+        <div class="coordinate-item">
+          <span>Longitude</span>
+          <p>{{ "%.6f"|format(center_coords[1]) }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if forecast_data %}
+      <div class="forecast-data">
+        {% if forecast_type == "hourly" %}
           <h2>Hourly Forecast (Next 24 Hours)</h2>
           <div class="table-container">
-              <table>
-                  <tr>
-                      <th>Time</th>
-                      <th>Temp (°C)</th>
-                      <th>RH (%)</th>
-                      <th>Dew Pt (°C)</th>
-                      <th>Prec (mm)</th>
-                      <th>P%</th>
-                      <th>Rain (mm)</th>
-                      <th>Showers (mm)</th>
-                      <th>Snow (mm)</th>
-                      <th>WCode</th>
-                      <th>Icon</th>
-                      <th>SoilT0 (°C)</th>
-                      <th>SoilT6 (°C)</th>
-                      <th>SoilM0</th>
-                      <th>SoilM1</th>
-                      <th>Wind (km/h)</th>
-                      <th>WGust (km/h)</th>
-                  </tr>
-                  {% for entry in forecast_data %}
-                  <tr>
-                      <td>{{ entry.time }}</td>
-                      <td>{{ entry.temperature }}</td>
-                      <td>{{ entry.relative_humidity }}</td>
-                      <td>{{ entry.dew_point }}</td>
-                      <td>{{ entry.precipitation }}</td>
-                      <td>{{ entry.precip_prob }}</td>
-                      <td>{{ entry.rain }}</td>
-                      <td>{{ entry.showers }}</td>
-                      <td>{{ entry.snowfall }}</td>
-                      <td>{{ entry.weathercode }}</td>
-                      <td>
-                        <img class="icon" src="{{ url_for('static', filename='icons/' ~ entry.weather_icon) }}" alt="Icon">
-                      </td>
-                      <td>{{ entry.soil_temperature_0 }}</td>
-                      <td>{{ entry.soil_temperature_6 }}</td>
-                      <td>{{ entry.soil_moisture_0 }}</td>
-                      <td>{{ entry.soil_moisture_1 }}</td>
-                      <td>{{ entry.wind_speed }}</td>
-                      <td>{{ entry.wind_gusts }}</td>
-                  </tr>
-                  {% endfor %}
-              </table>
+            <table>
+              <tr>
+                <th>Time</th>
+                <th>Temp (°C)</th>
+                <th>RH (%)</th>
+                <th>Dew Pt (°C)</th>
+                <th>Prec (mm)</th>
+                <th>P%</th>
+                <th>Rain (mm)</th>
+                <th>Showers (mm)</th>
+                <th>Snow (mm)</th>
+                <th>WCode</th>
+                <th>Icon</th>
+                <th>SoilT0 (°C)</th>
+                <th>SoilM0</th>
+                <th>Wind (km/h)</th>
+                <th>WGust (km/h)</th>
+              </tr>
+              {% for entry in forecast_data %}
+              <tr>
+                <td>{{ entry.time }}</td>
+                <td>{{ entry.temperature }}</td>
+                <td>{{ entry.relative_humidity }}</td>
+                <td>{{ entry.dew_point }}</td>
+                <td>{{ entry.precipitation }}</td>
+                <td>{{ entry.precip_prob }}</td>
+                <td>{{ entry.rain }}</td>
+                <td>{{ entry.showers }}</td>
+                <td>{{ entry.snowfall }}</td>
+                <td>{{ entry.weathercode }}</td>
+                <td>
+                  <img class="icon" src="{{ url_for('static', filename='icons/' ~ entry.weather_icon) }}" alt="Icon">
+                </td>
+                <td>{{ entry.soil_temperature_0 }}</td>
+                <td>{{ entry.soil_moisture_0 }}</td>
+                <td>{{ entry.wind_speed }}</td>
+                <td>{{ entry.wind_gusts }}</td>
+              </tr>
+              {% endfor %}
+            </table>
           </div>
-          {% elif forecast_type == "daily" %}
+        {% elif forecast_type == "daily" %}
           <h2>Daily Forecast (Next 7 Days)</h2>
           <div class="table-container">
-              <table>
-                  <tr>
-                      <th>Date</th>
-                      <th>Max Temp (°C)</th>
-                      <th>Min Temp (°C)</th>
-                      <th>Precip (mm)</th>
-                      <th>Max Wind (km/h)</th>
-                      <th>UV Index</th>
-                  </tr>
-                  {% for entry in forecast_data %}
-                  <tr>
-                      <td>{{ entry.date }}</td>
-                      <td class="{% if entry.temp_max > 30 %}temp-high{% endif %}">{{ entry.temp_max }}</td>
-                      <td class="{% if entry.temp_min < 5 %}temp-low{% endif %}">{{ entry.temp_min }}</td>
-                      <td class="{% if entry.precipitation_sum > 10 %}precip-high{% endif %}">{{ entry.precipitation_sum }}</td>
-                      <td>{{ entry.wind_speed_max }}</td>
-                      <td>{{ entry.uv_index }}</td>
-                  </tr>
-                  {% endfor %}
-              </table>
-          </div>
-          {% endif %}
+            <table>
+              <tr>
+                <th>Date</th>
+                <th>Max Temp (°C)</th>
+                <th>Min Temp (°C)</th>
+                <th>Precip (mm)</th>
+                <th>Max Wind (km/h)</th>
+                <th>UV Index</th>
+              </tr>
+              {% for entry in forecast_data %}
+              <tr>
+                <td>{{ entry.date }}</td>
+                <td class="{% if entry.temp_max > 30 %}temp-high{% endif %}">{{ entry.temp_max }}</td>
+                <td class="{% if entry.temp_min < 5 %}temp-low{% endif %}">{{ entry.temp_min }}</td>
+                <td class="{% if entry.precipitation_sum > 10 %}precip-high{% endif %}">{{ entry.precipitation_sum }}</td>
+                <td>{{ entry.wind_speed_max }}</td>
+                <td>{{ entry.uv_index }}</td>
+              </tr>
+              {% endfor %}
+            </table>
           </div>
         {% endif %}
-    </div>
-    
-    <footer>
-        <p>Agriculture Weather Dashboard &copy; {{ now.year }}</p>
-    </footer>
+      </div>
+    {% endif %}
+  </div>
+
+  <footer>
+    <p>Agriculture Weather Dashboard &copy; {{ now.year }}</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // JavaScript to handle active farm button selection
+      const farmButtons = document.querySelectorAll('.farm-button');
+      const farmInput = document.getElementById('farm-input');
+
+      farmButtons.forEach(button => {
+        if (!button.classList.contains('disabled')) {
+          button.addEventListener('click', function() {
+            // Remove "selected" class from all active farm buttons
+            farmButtons.forEach(btn => {
+              if (!btn.classList.contains('disabled')) {
+                btn.classList.remove('selected');
+              }
+            });
+            // Add "selected" class to the clicked button and update the hidden input
+            this.classList.add('selected');
+            const selectedFarm = this.getAttribute('data-farm');
+            console.log("Selected farm:", selectedFarm); // Debug log
+            farmInput.value = selectedFarm;
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>

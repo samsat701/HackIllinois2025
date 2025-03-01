@@ -10,10 +10,14 @@
 <body>
   <header>
     <div class="header-container">
-      <div class="logo-container">
-        <h1>WinifyAI</h1>
-        <span class="logo-tagline">Agricultural Intelligence</span>
-      </div>
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+            <div class="title-container">
+              <h1>WinifyAI</h1>
+              <span class="logo-tagline">Agricultural Intelligence</span>
+            </div>
+          </div>
+          
       <nav>
         <a href="{{ url_for('home') }}" class="nav-link">
           <span class="nav-icon">🏠</span>
@@ -79,33 +83,65 @@
       
       // Add a message to the chat
       function addMessage(message, isUser) {
-  const messageDiv = document.createElement('div');
-  messageDiv.className = isUser ? 'message user-message' : 'message bot-message';
-  
-  const messageContent = document.createElement('div');
-  messageContent.className = 'message-content';
-  
-  const messagePara = document.createElement('p');
-  if (isUser) {
-    messagePara.textContent = message;
-  } else {
-    messagePara.innerHTML = message;  // Render HTML for bot messages
-  }
-  
-  messageContent.appendChild(messagePara);
-  messageDiv.appendChild(messageContent);
-  chatMessages.appendChild(messageDiv);
-  
-  // Scroll to bottom
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
+        const messageDiv = document.createElement('div');
+        messageDiv.className = isUser ? 'message user-message' : 'message bot-message';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        const messagePara = document.createElement('p');
+        if (isUser) {
+          messagePara.textContent = message;
+        } else {
+          messagePara.innerHTML = message;  // Render HTML for bot messages
+        }
+        
+        messageContent.appendChild(messagePara);
+        messageDiv.appendChild(messageContent);
+        chatMessages.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
+      // Show typing indicator
+      function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot-message';
+        typingDiv.id = 'typing-indicator';
+        
+        const typingContent = document.createElement('div');
+        typingContent.className = 'typing-indicator';
+        
+        // Create the three dots
+        for (let i = 0; i < 3; i++) {
+          const dot = document.createElement('span');
+          typingContent.appendChild(dot);
+        }
+        
+        typingDiv.appendChild(typingContent);
+        chatMessages.appendChild(typingDiv);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      
+      // Remove typing indicator
+      function removeTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+      }
       
       // Handle the user's message submission
       function handleUserMessage(message) {
         if (!message.trim()) return;
         addMessage(message, true);
         userInput.value = '';
+        
+        // Show typing indicator
+        showTypingIndicator();
         
         // Call the backend to get a response from the agriculture specialist model
         fetch("/get_response", {
@@ -115,9 +151,12 @@
         })
         .then(response => response.json())
         .then(data => {
+          // Remove typing indicator and add the response
+          removeTypingIndicator();
           addMessage(data.response, false);
         })
         .catch(err => {
+          removeTypingIndicator();
           addMessage("Sorry, something went wrong. Please try again.", false);
         });
       }
@@ -141,5 +180,5 @@
       });
     });
   </script>
-</body>
+  </body>
 </html>
