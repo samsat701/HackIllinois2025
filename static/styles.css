@@ -1,19 +1,17 @@
 /* Modern Agriculture Weather Dashboard CSS */
 :root {
-  --primary-color: #2E7D32;
-  --primary-light: #60ad5e;
-  --primary-dark: #005005;
-  --secondary-color: #FFA000;
-  --text-color: #333;
-  --light-text: #fff;
-  --border-color: #e0e0e0;
-  --background-color: #f9f9f9;
-  --card-bg: #fff;
-  --error-color: #D32F2F;
-  --success-color: #388E3C;
-  --hover-color: #EEF7EE;
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --primary-color: #2E7D32;      /* Forest Green */
+  --primary-light: #4CAF50;      /* Medium Green */
+  --primary-dark: #1B5E20;       /* Dark Green */
+  --secondary-color: #FF8F00;    /* Amber */
+  --text-color: #263238;         /* Blue Gray Dark */
+  --light-text: #FFFFFF;         /* White */
+  --border-color: #DCEDC8;       /* Light Green */
+  --background-color: #F1F8E9;   /* Off-White Green Tint */
+  --card-bg: #FFFFFF;            /* White */
+  --hover-color: #E8F5E9;        /* Very Light Green */
   --border-radius: 8px;
+  --shadow: 0 4px 8px rgba(0, 0, 0, 0.1)
 }
 
 * {
@@ -59,10 +57,6 @@ header {
   align-items: center;
 }
 
-.logo-container {
-  text-align: center;
-  margin-bottom: 15px;
-}
 
 h1 {
   font-size: 2.5rem;
@@ -558,24 +552,32 @@ footer {
 
 .message-content {
   max-width: 80%;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: 18px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  line-height: 1.5;
+  font-size: 1.05rem;
 }
 
 .bot-message .message-content {
   background-color: var(--hover-color);
   border-bottom-left-radius: 5px;
+  color: var(--text-color);
 }
 
 .user-message .message-content {
-  background-color: var(--primary-light);
+  background-color: var(--primary-color);
   color: var(--light-text);
   border-bottom-right-radius: 5px;
+  font-weight: 500;
 }
 
 .message-content p {
-  margin: 0;
+  margin: 0 0 10px 0;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
 }
 
 .chat-input-container {
@@ -660,20 +662,238 @@ footer {
   transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-  .chatbot-container {
-      height: 400px;
-  }
-  
-  .message-content {
-      max-width: 90%;
-  }
-  
-  .suggestion-buttons {
-      flex-direction: column;
-  }
-  
-  .suggestion-btn {
-      width: 100%;
-  }
+/* Typing indicator styles */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--hover-color);
+  border-radius: 18px;
+  border-bottom-left-radius: 5px;
+  max-width: 80%;
+  margin-bottom: 10px;
 }
+
+.typing-indicator span {
+  height: 8px;
+  width: 8px;
+  margin: 0 2px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  display: inline-block;
+  opacity: 0.7;
+}
+
+.typing-indicator span:nth-child(1) {
+  animation: pulse 1.2s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation: pulse 1.2s infinite ease-in-out .2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation: pulse 1.2s infinite ease-in-out .4s;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
+/* Improved chat text styling */
+.message-content {
+  max-width: 80%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  line-height: 1.5;
+  font-size: 1.05rem;
+}
+
+.bot-message .message-content {
+  background-color: var(--hover-color);
+  border-bottom-left-radius: 5px;
+  color: var(--text-color);
+}
+
+.user-message .message-content {
+  background-color: var(--primary-color);
+  color: var(--light-text);
+  border-bottom-right-radius: 5px;
+  font-weight: 500;
+}
+
+.message-content p {
+  margin: 0 0 10px 0;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Style for links in chat */
+.message-content a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.bot-message .message-content a {
+  color: var(--primary-dark);
+}
+
+.user-message .message-content a {
+  color: var(--light-text);
+}
+
+/* Style for code blocks and pre in chat */
+.message-content pre, 
+.message-content code {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-family: monospace;
+  font-size: 0.95em;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bot-message .message-content pre,
+.bot-message .message-content code {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.user-message .message-content pre,
+.user-message .message-content code {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.message-content pre {
+  padding: 10px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.logo-container img.logo {
+  max-height: 80px;
+  margin-right: 20px;
+  margin-bottom: 0;
+  transform: scale(2); /* This zooms the logo to 200% */
+  transform-origin: left center; /* This ensures the logo scales from the left side */
+  margin-left: -40px; /* This moves the logo to the left */
+  position: relative; /* Ensures proper positioning */
+  z-index: 1; /* Ensures logo stays behind or in front of other elements as needed */
+}
+
+.title-container {
+  display: flex;
+  flex-direction: column;
+  margin-left: 40px; /* Adds space between the zoomed logo and title */
+  position: relative; /* Ensures proper positioning */
+}
+
+.logo-container h1 {
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.logo-tagline {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+/* Farm Selection Buttons Layout */
+.farm-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 15px;
+}
+
+/* Style for each farm button */
+.farm-button {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Increase the size of the farm images */
+.farm-button img {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+/* Hover effect for active buttons */
+.farm-button:hover {
+  transform: translateY(-3px);
+}
+
+/* Highlight selected farm button with a light yellow background and distinct border */
+.farm-button.selected {
+  background-color: #fff9c4; /* Light yellow */
+  border-color: #fdd835;
+  transform: scale(1.02);
+}
+
+/* Optional: Style for disabled buttons */
+.farm-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.farm-button {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: var(--shadow);
+}
+
+.farm-button img {
+  width: 100%;
+  height: 180px; /* Fixed height for consistency */
+  object-fit: cover; /* This ensures images cover the area without distortion */
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.farm-button span {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+/* Enhance the selected state */
+.farm-button.selected {
+  background-color: #fff9c4; /* Light yellow */
+  border-color: var(--secondary-color);
+  transform: scale(1.02);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+
+
