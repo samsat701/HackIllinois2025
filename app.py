@@ -1,5 +1,5 @@
-#test
 import os
+import sqlite3
 import markdown
 from dotenv import load_dotenv
 load_dotenv()
@@ -10,21 +10,20 @@ from google import genai
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=gemini_api_key)
 
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify, url_for, redirect, session, flash
 import requests
 from datetime import datetime
 import pytz
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "your_default_secret_key")  # Set a secure secret key!
 
 def convert_markdown(md_text):
-    """
-    Convert Markdown text to HTML with additional extensions.
-    """
-    # Use extensions for better formatting
     return markdown.markdown(md_text, extensions=['tables', 'fenced_code', 'nl2br'])
 
-# (Existing functions for weather and coordinates remain unchanged)
+# ------------------------------
+# Weather and Coordinate Functions
+# ------------------------------
 def compute_center(coordinates):
     lats = [coord["lat"] for coord in coordinates]
     lons = [coord["lon"] for coord in coordinates]
@@ -72,12 +71,195 @@ def map_weather_icon(weathercode):
     else:
         return "default.png"
 
-@app.route("/")
-def home():
-    now = datetime.now()
-    return render_template("home.html", now=now)
+# ------------------------------
+# Database Helper Functions
+# ------------------------------
+def get_db_connection():
+    conn = sqlite3.connect("farms.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
+def get_user_farms(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    farms = cursor.execute("SELECT * FROM farms WHERE user_id=?", (user_id,)).fetchall()
+    farms_with_equipment = []
+    for farm in farms:
+        equipments = cursor.execute("SELECT * FROM equipment WHERE farm_id=?", (farm["id"],)).fetchall()
+        farm_dict = dict(farm)
+        farm_dict["equipments"] = [dict(eq) for eq in equipments]
+        farms_with_equipment.append(farm_dict)
+    conn.close()
+    return farms_with_equipment
+
+# ------------------------------
+# Login and Logout functionality
+# ------------------------------
+
+# Default route always redirects to the login page.
+@app.route("/")
+def index():
+    return redirect(url_for("login"))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # Clear any existing session to prevent auto login.
+    session.clear()
+    if request.method == "POST":
+        # For demo purposes, we're using hard-coded credentials.
+        # In a real app, use a database and hashed passwords.
+        username = request.form.get("username")
+        password = request.form.get("password")
+        
+        if username == "admin" and password == "password":
+            session["username"] = username
+            return redirect(url_for("home"))
+        else:
+            flash("Invalid credentials. Please try again.")
+            return redirect(url_for("login"))
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("username", None)
+    return redirect(url_for("login"))
+
+# ------------------------------
+# Protected Routes (Login Required)
+# ------------------------------
+def login_required(func):
+    """Decorator to check if the user is logged in."""
+    from functools import wraps
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if "username" not in session:
+            return redirect(url_for("login"))
+        return func(*args, **kwargs)
+    return decorated_view
+
+# Home route now displays farms in an accordion layout and is now at '/home'
+@app.route("/home")
+@login_required
+def home():
+    user_id = 1  # Hard-coded for demo; in production, fetch from session
+    farms = get_user_farms(user_id)
+    now = datetime.now()
+    return render_template("home.html", now=now, username=session.get("username"), farms=farms)
+
+@app.route("/add_farm", methods=["GET", "POST"])
+@login_required
+def add_farm():
+    user_id = 1  # Hard-coded for demo; in production, retrieve from session
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if request.method == "POST":
+        # Get form data
+        name = request.form.get("name")
+        state = request.form.get("state")
+        latitude = request.form.get("latitude")
+        longitude = request.form.get("longitude")
+        description = request.form.get("description")
+        
+        # Insert new farm into the database
+        cursor.execute(
+            "INSERT INTO farms (user_id, name, state, latitude, longitude, description) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, name, state, latitude, longitude, description)
+        )
+        conn.commit()
+        conn.close()
+        flash("Farm added successfully!")
+        return redirect(url_for("home"))
+    # Render the add farm form on GET requests
+    return render_template("add_farm.html", username=session.get("username"), now=datetime.now())
+
+@app.route("/update_farm/<int:farm_id>", methods=["GET", "POST"])
+@login_required
+def update_farm(farm_id):
+    user_id = 1  # Hard-coded for demo
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if request.method == "POST":
+        # Update farm details
+        name = request.form.get("name")
+        state = request.form.get("state")
+        latitude = request.form.get("latitude")
+        longitude = request.form.get("longitude")
+        description = request.form.get("description")
+        cursor.execute(
+            "UPDATE farms SET name=?, state=?, latitude=?, longitude=?, description=? WHERE id=? AND user_id=?",
+            (name, state, latitude, longitude, description, farm_id, user_id)
+        )
+        
+        # Update existing equipment records
+        equipment_ids = request.form.getlist("equipment_ids")
+        for eq_id in equipment_ids:
+            eq_name = request.form.get(f"equipment_{eq_id}_name")
+            eq_type = request.form.get(f"equipment_{eq_id}_type")
+            eq_working_speed = request.form.get(f"equipment_{eq_id}_working_speed")
+            eq_soil_type = request.form.get(f"equipment_{eq_id}_soil_type")
+            eq_width = request.form.get(f"equipment_{eq_id}_width")
+            eq_operating_cost = request.form.get(f"equipment_{eq_id}_operating_cost")
+            eq_details = request.form.get(f"equipment_{eq_id}_details")
+            cursor.execute(
+                "UPDATE equipment SET name=?, type=?, working_speed=?, soil_type=?, width=?, operating_cost=?, details=? WHERE id=?",
+                (eq_name, eq_type, eq_working_speed, eq_soil_type, eq_width, eq_operating_cost, eq_details, eq_id)
+            )
+        
+        # Process new equipment entries (if any)
+        new_names = request.form.getlist("new_equipment_name[]")
+        new_types = request.form.getlist("new_equipment_type[]")
+        new_working_speeds = request.form.getlist("new_equipment_working_speed[]")
+        new_soil_types = request.form.getlist("new_equipment_soil_type[]")
+        new_widths = request.form.getlist("new_equipment_width[]")
+        new_operating_costs = request.form.getlist("new_equipment_operating_cost[]")
+        new_details_list = request.form.getlist("new_equipment_details[]")
+        
+        for name, type_, ws, soil, width, op_cost, details in zip(
+            new_names, new_types, new_working_speeds, new_soil_types, new_widths, new_operating_costs, new_details_list
+        ):
+            # Only insert if the equipment name is provided (you could add further validation)
+            if name.strip():
+                cursor.execute(
+                    "INSERT INTO equipment (farm_id, name, type, working_speed, soil_type, width, operating_cost, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (farm_id, name, type_, ws, soil, width, op_cost, details)
+                )
+                
+        conn.commit()
+        conn.close()
+        flash("Farm and equipment updated successfully.")
+        return redirect(url_for("home"))
+    else:
+        # GET request: fetch farm and its equipment
+        farm = cursor.execute("SELECT * FROM farms WHERE id=? AND user_id=?", (farm_id, user_id)).fetchone()
+        equipments = cursor.execute("SELECT * FROM equipment WHERE farm_id=?", (farm_id,)).fetchall()
+        conn.close()
+        if not farm:
+            flash("Farm not found or unauthorized.")
+            return redirect(url_for("home"))
+        farm_dict = dict(farm)
+        farm_dict["equipments"] = [dict(eq) for eq in equipments]
+        return render_template("update_farm.html", farm=farm_dict, username=session.get("username"), now=datetime.now())
+
+# Delete Farm: Removes the farm (and its associated equipment) from the database.
+@app.route("/delete_farm/<int:farm_id>")
+@login_required
+def delete_farm(farm_id):
+    user_id = 1  # Hard-coded for demo
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Remove associated equipment first (if not using ON DELETE CASCADE)
+    cursor.execute("DELETE FROM equipment WHERE farm_id=?", (farm_id,))
+    cursor.execute("DELETE FROM farms WHERE id=? AND user_id=?", (farm_id, user_id))
+    conn.commit()
+    conn.close()
+    flash("Farm deleted successfully.")
+    return redirect(url_for("home"))
+
+# ------------------------------
+# Weather Dashboard and Chatbot Routes
+# ------------------------------
 @app.route("/weather", methods=["GET", "POST"])
+@login_required
 def dashboard():
     farm_name = None
     forecast_data = None
@@ -197,13 +379,14 @@ def dashboard():
                            farm_name=farm_name,
                            now=now)
 
-
 @app.route("/chatbot")
+@login_required
 def chatbot():
     now = datetime.now()
     return render_template("chatbot.html", now=now)
 
 @app.route("/get_response", methods=["POST"])
+@login_required
 def get_response():
     data = request.get_json()
     user_message = data.get("message", "")
@@ -213,12 +396,10 @@ You are an expert agriculture specialist named Randy.
 {user_message}
 """
     try:
-        # Using Gemini API instead of OpenAI:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt
         )
-        # Convert Markdown response to HTML so formatting is preserved
         final_response = convert_markdown(response.text)
     except Exception as e:
         final_response = "Sorry, I encountered an error: " + str(e)

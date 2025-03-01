@@ -1,76 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinifyAI | Agricultural Weather Intelligence</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8">
+  <title>WinifyAI | My Farms</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    /* Farm card styling similar to dashboard */
+    .farm-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .farm-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      background-color: #fff;
+    }
+    
+    .farm-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .farm-header {
+      cursor: pointer;
+      padding: 15px;
+      position: relative;
+    }
+    
+    .farm-header h3 {
+      margin-top: 0;
+      color: #2c3e50;
+      font-size: 1.2rem;
+    }
+    
+    .farm-image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+    
+    .farm-location {
+      display: flex;
+      align-items: center;
+      margin-top: 5px;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+    
+    .farm-location span {
+      margin-left: 5px;
+    }
+    
+    .farm-description {
+      color: #555;
+      font-size: 0.9rem;
+      margin: 8px 0;
+    }
+    
+    .farm-details {
+      display: none;
+      padding: 0 15px 15px;
+      border-top: 1px solid #eee;
+    }
+    
+    .equipment-list {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+    
+    .equipment-list li {
+      margin-bottom: 8px;
+    }
+    
+    .farm-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .action-button {
+      padding: 8px 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .action-button:hover {
+      background-color: #2980b9;
+    }
+    
+    .action-button.delete {
+      background-color: #e74c3c;
+    }
+    
+    .action-button.delete:hover {
+      background-color: #c0392b;
+    }
+    
+    .toggle-indicator {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      font-size: 1.2rem;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
-                <div class="title-container">
-                  <h1>WinifyAI</h1>
-                  <span class="logo-tagline">Agricultural Intelligence</span>
-                </div>
-              </div>              
-            <nav>
-                <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
-                    <span class="nav-icon">🏠</span>
-                    <span>Home</span>
-                </a>
-                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
-                    <span>Weather Dashboard</span>
-                </a>
-                <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
-                    <span class="nav-icon">💬</span>
-                    <span>Chatbot</span>
-                </a>
-            </nav>
+  <header>
+    <div class="header-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+        <div class="title-container">
+          <h1>WinifyAI</h1>
+          <span class="logo-tagline">Agricultural Intelligence</span>
         </div>
-    </header>
-    
-    
-    <div class="container">
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🌡️</div>
-                <h3>Precise Forecasts</h3>
-                <p>Access hourly and 7-day weather forecasts tailored specifically for agricultural needs.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🌱</div>
-                <h3>Soil Conditions</h3>
-                <p>Monitor soil temperature and moisture levels to optimize planting and irrigation.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">💧</div>
-                <h3>Precipitation Tracking</h3>
-                <p>Stay ahead of rainfall, showers, and snow events with accurate precipitation forecasts.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">💨</div>
-                <h3>Wind Analysis</h3>
-                <p>Plan spraying and field operations with detailed wind speed and gust predictions.</p>
-            </div>
-        </div>
-        
-        <div class="cta-section">
-            <h3>Ready to optimize your farming decisions?</h3>
-            <a href="{{ url_for('dashboard') }}" class="cta-button">View Weather Dashboard</a>
-        </div>
+      </div>
+      <nav>
+        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <span class="nav-icon">📊</span>
+          <span>Weather Dashboard</span>
+        </a>
+        <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
+          <span class="nav-icon">💬</span>
+          <span>Chatbot</span>
+        </a>
+      </nav>
+      <div class="user-profile">
+        <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
+        <span class="user-name">{{ username }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+      </div>
     </div>
-    
-    <footer>
-        <p>WinifyAI Agricultural Weather Intelligence &copy; {{ now.year }}</p>
-    </footer>
+  </header>
+  
+  <div class="container">
+    <h2>My Farms</h2>
+    <!-- Add Farm Button -->
+    <div style="margin-bottom: 20px;">
+      <a href="{{ url_for('add_farm') }}" class="action-button">Add Farm</a>
+    </div>
+    <div class="farm-list">
+      {% for farm in farms %}
+        <div class="farm-card">
+          <img src="{{ url_for('static', filename='icons/farm' ~ loop.index ~ '.jpg') }}" alt="{{ farm.name }}" class="farm-image">
+          <div class="farm-header" onclick="toggleEquipment(this)">
+            <h3>{{ farm.name }}</h3>
+            <div class="farm-location">
+              <span>📍 {{ farm.state }}</span>
+            </div>
+            <p class="farm-description">{{ farm.description }}</p>
+            <div class="toggle-indicator">▼</div>
+          </div>
+          <div class="farm-details">
+            <h4>Equipment</h4>
+            <ul class="equipment-list">
+              {% for eq in farm.equipments %}
+                <li>
+                  <strong>{{ eq.name }}</strong> - {{ eq.details }}
+                </li>
+              {% endfor %}
+            </ul>
+            <div class="farm-actions">
+              <a href="{{ url_for('update_farm', farm_id=farm.id) }}" class="action-button">Update Farm</a>
+              <a href="{{ url_for('delete_farm', farm_id=farm.id) }}" class="action-button delete" onclick="return confirm('Are you sure you want to delete this farm?');">Delete Farm</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  
+  <footer>
+    <p>WinifyAI Agricultural Weather Intelligence &copy; {{ now.year }}</p>
+  </footer>
+  
+  <script>
+    function toggleEquipment(headerElem) {
+      const details = headerElem.nextElementSibling;
+      const indicator = headerElem.querySelector('.toggle-indicator');
+      
+      if(details.style.display === "none" || details.style.display === "") {
+        details.style.display = "block";
+        indicator.textContent = "▲";
+      } else {
+        details.style.display = "none";
+        indicator.textContent = "▼";
+      }
+    }
+  </script>
 </body>
 </html>

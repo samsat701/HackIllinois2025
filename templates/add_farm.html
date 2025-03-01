@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Farm | WinifyAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    /* Simple styling for the form */
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      background-color: #3498db;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+        <div class="title-container">
+          <h1>WinifyAI</h1>
+          <span class="logo-tagline">Agricultural Intelligence</span>
+        </div>
+      </div>
+      <nav>
+        <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('dashboard') }}" class="nav-link">Weather Dashboard</a>
+        <a href="{{ url_for('chatbot') }}" class="nav-link">Chatbot</a>
+      </nav>
+      <div class="user-profile">
+        <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
+        <span class="user-name">{{ username }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <div class="container">
+    <h2>Add a New Farm</h2>
+    <form method="POST">
+      <label for="name">Farm Name:</label>
+      <input type="text" id="name" name="name" required>
+      
+      <label for="state">State:</label>
+      <input type="text" id="state" name="state" required>
+      
+      <label for="latitude">Latitude:</label>
+      <input type="number" step="any" id="latitude" name="latitude" required>
+      
+      <label for="longitude">Longitude:</label>
+      <input type="number" step="any" id="longitude" name="longitude" required>
+      
+      <label for="description">Description:</label>
+      <textarea id="description" name="description" rows="3"></textarea>
+      
+      <button type="submit">Add Farm</button>
+    </form>
+  </div>
+  
+  <footer>
+    <p>WinifyAI Agricultural Weather Intelligence &copy; {{ now.year }}</p>
+  </footer>
+</body>
+</html>

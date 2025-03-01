@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update Farm - {{ farm.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Form Layout Improvements */
+    .form-container {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--primary-dark);
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+      outline: none;
+    }
+    
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .full-width {
+      grid-column: 1 / -1;
+    }
+    
+    /* Equipment Card Styling */
+    .equipment-section {
+      margin: 40px 0;
+    }
+    
+    .equipment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    
+    .equipment-header h3 {
+      margin: 0;
+      color: var(--primary-dark);
+    }
+    
+    .equipment-card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--primary-color);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .equipment-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    
+    .equipment-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .equipment-card-title {
+      font-weight: 600;
+      color: var(--primary-dark);
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    
+    .equipment-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    
+    .equipment-details {
+      grid-column: 1 / -1;
+    }
+    
+    /* Button Styling */
+    .action-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .action-button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    
+    .action-button.secondary {
+      background-color: #f0f0f0;
+      color: var(--text-color);
+    }
+    
+    .action-button.secondary:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .action-button.danger {
+      background-color: #e74c3c;
+    }
+    
+    .action-button.danger:hover {
+      background-color: #c0392b;
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 20px;
+      transition: color 0.2s;
+    }
+    
+    .back-link:hover {
+      color: var(--primary-dark);
+    }
+    
+    .back-link i {
+      margin-right: 8px;
+    }
+    
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    
+    /* Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .new-equipment {
+      animation: fadeIn 0.4s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+        <div class="title-container">
+          <h1>WinifyAI</h1>
+          <span class="logo-tagline">Agricultural Intelligence</span>
+        </div>
+      </div>
+      <nav>
+        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <span class="nav-icon">📊</span>
+          <span>Weather Dashboard</span>
+        </a>
+        <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
+          <span class="nav-icon">💬</span>
+          <span>Chatbot</span>
+        </a>
+      </nav>
+      <div class="user-profile">
+        <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
+        <span class="user-name">{{ username }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+      </div>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="dashboard-card">
+      <h2><i class="fas fa-edit"></i> Update Farm: {{ farm.name }}</h2>
+      
+      <form method="post">
+        <div class="form-container">
+          <h3><i class="fas fa-info-circle"></i> Farm Information</h3>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name"><i class="fas fa-tag"></i> Farm Name:</label>
+              <input type="text" id="name" name="name" value="{{ farm.name }}" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="state"><i class="fas fa-map-marker-alt"></i> State:</label>
+              <input type="text" id="state" name="state" value="{{ farm.state }}" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="latitude"><i class="fas fa-location-arrow"></i> Latitude:</label>
+              <input type="text" id="latitude" name="latitude" value="{{ farm.latitude }}" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="longitude"><i class="fas fa-location-arrow"></i> Longitude:</label>
+              <input type="text" id="longitude" name="longitude" value="{{ farm.longitude }}" required>
+            </div>
+            
+            <div class="form-group full-width">
+              <label for="description"><i class="fas fa-align-left"></i> Description:</label>
+              <textarea id="description" name="description" required>{{ farm.description }}</textarea>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Existing Equipment Section -->
+        <div class="equipment-section">
+          <div class="equipment-header">
+            <h3><i class="fas fa-tractor"></i> Existing Equipment</h3>
+          </div>
+          
+          {% for eq in farm.equipments %}
+            <div class="equipment-card">
+              <div class="equipment-card-header">
+                <h4 class="equipment-card-title">{{ eq.name }}</h4>
+                <button type="button" class="action-button danger remove-equipment" data-id="{{ eq.id }}">
+                  <i class="fas fa-trash-alt"></i> Remove
+                </button>
+              </div>
+              
+              <!-- Hidden input to pass the equipment ID -->
+              <input type="hidden" name="equipment_ids" value="{{ eq.id }}">
+              
+              <div class="equipment-grid">
+                <div class="form-group">
+                  <label for="equipment_{{ eq.id }}_name">Equipment Name:</label>
+                  <input type="text" id="equipment_{{ eq.id }}_name" name="equipment_{{ eq.id }}_name" value="{{ eq.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="equipment_{{ eq.id }}_type">Type:</label>
+                  <input type="text" id="equipment_{{ eq.id }}_type" name="equipment_{{ eq.id }}_type" value="{{ eq.type }}" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="equipment_{{ eq.id }}_working_speed">Working Speed:</label>
+                  <input type="text" id="equipment_{{ eq.id }}_working_speed" name="equipment_{{ eq.id }}_working_speed" value="{{ eq.working_speed }}">
+                </div>
+                
+                <div class="form-group">
+                  <label for="equipment_{{ eq.id }}_soil_type">Soil Type:</label>
+                  <input type="text" id="equipment_{{ eq.id }}_soil_type" name="equipment_{{ eq.id }}_soil_type" value="{{ eq.soil_type }}">
+                </div>
+                
+                <div class="form-group">
+                  <label for="equipment_{{ eq.id }}_width">Width:</label>
+                  <input type="text" id="equipment_{{ eq.id }}_width" name="equipment_{{ eq.id }}_width" value="{{ eq.width }}">
+                </div>
+                
+                <div class="form-group">
+                  <label for="equipment_{{ eq.id }}_operating_cost">Operating Cost:</label>
+                  <input type="text" id="equipment_{{ eq.id }}_operating_cost" name="equipment_{{ eq.id }}_operating_cost" value="{{ eq.operating_cost }}">
+                </div>
+                
+                <div class="form-group equipment-details">
+                  <label for="equipment_{{ eq.id }}_details">Details:</label>
+                  <textarea id="equipment_{{ eq.id }}_details" name="equipment_{{ eq.id }}_details" rows="2">{{ eq.details }}</textarea>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        
+        <!-- New Equipment Section -->
+        <div class="equipment-section">
+          <div class="equipment-header">
+            <h3><i class="fas fa-plus-circle"></i> Add New Equipment</h3>
+            <button type="button" id="addEquipmentButton" class="action-button">
+              <i class="fas fa-plus"></i> Add Equipment
+            </button>
+          </div>
+          
+          <div id="newEquipmentContainer"></div>
+        </div>
+        
+        <div class="button-container">
+          <a href="{{ url_for('home') }}" class="action-button secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+          <button type="submit" class="action-button">
+            <i class="fas fa-save"></i> Update Farm
+          </button>
+        </div>
+      </form>
+      
+      <a href="{{ url_for('home') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to My Farms
+      </a>
+    </div>
+  </div>
+  
+  <footer>
+    <p>WinifyAI Agricultural Weather Intelligence &copy; {{ now.year }}</p>
+  </footer>
+  
+  <script>
+    // Add new equipment fields dynamically
+    document.getElementById("addEquipmentButton").addEventListener("click", function() {
+      const container = document.getElementById("newEquipmentContainer");
+      const equipmentId = Date.now(); // Generate unique ID
+      const equipmentDiv = document.createElement("div");
+      equipmentDiv.className = "equipment-card new-equipment";
+      equipmentDiv.innerHTML = `
+        <div class="equipment-card-header">
+          <h4 class="equipment-card-title">New Equipment</h4>
+          <button type="button" class="action-button danger" onclick="removeEquipment(this)">
+            <i class="fas fa-trash-alt"></i> Remove
+          </button>
+        </div>
+        
+        <div class="equipment-grid">
+          <div class="form-group">
+            <label>Equipment Name:</label>
+            <input type="text" name="new_equipment_name[]" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Type:</label>
+            <input type="text" name="new_equipment_type[]" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Working Speed:</label>
+            <input type="text" name="new_equipment_working_speed[]">
+          </div>
+          
+          <div class="form-group">
+            <label>Soil Type:</label>
+            <input type="text" name="new_equipment_soil_type[]">
+          </div>
+          
+          <div class="form-group">
+            <label>Width:</label>
+            <input type="text" name="new_equipment_width[]">
+          </div>
+          
+          <div class="form-group">
+            <label>Operating Cost:</label>
+            <input type="text" name="new_equipment_operating_cost[]">
+          </div>
+          
+          <div class="form-group equipment-details">
+            <label>Details:</label>
+            <textarea name="new_equipment_details[]" rows="2"></textarea>
+          </div>
+        </div>
+      `;
+      container.appendChild(equipmentDiv);
+    });
+    
+    // Remove equipment card
+    function removeEquipment(button) {
+      const card = button.closest('.equipment-card');
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(10px)';
+      card.style.transition = 'opacity 0.3s, transform 0.3s';
+      
+      setTimeout(() => {
+        card.remove();
+      }, 300);
+    }
+    
+    // Handle existing equipment removal
+    document.querySelectorAll('.remove-equipment').forEach(button => {
+      button.addEventListener('click', function() {
+        const card = this.closest('.equipment-card');
+        const equipmentId = this.getAttribute('data-id');
+        
+        // Create a hidden input to mark this equipment for deletion
+        const deleteInput = document.createElement('input');
+        deleteInput.type = 'hidden';
+        deleteInput.name = 'delete_equipment_ids';
+        deleteInput.value = equipmentId;
+        document.querySelector('form').appendChild(deleteInput);
+        
+        // Animate and remove the card
+        removeEquipment(this);
+      });
+    });
+  </script>
+</body>
+</html>

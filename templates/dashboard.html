@@ -8,31 +8,39 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-  <header>
-    <div class="header-container">
-      <div class="logo-container">
-        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
-        <div class="title-container">
-          <h1>WinifyAI</h1>
-          <span class="logo-tagline">Agricultural Intelligence</span>
+    <header>
+        <div class="header-container">
+          <div class="logo-container">
+            <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+            <div class="title-container">
+              <h1>WinifyAI</h1>
+              <span class="logo-tagline">Agricultural Intelligence</span>
+            </div>
+          </div>
+          
+          <nav>
+            <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+              <span class="nav-icon">🏠</span>
+              <span>Home</span>
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+              <span class="nav-icon">📊</span>
+              <span>Weather Dashboard</span>
+            </a>
+            <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
+              <span class="nav-icon">💬</span>
+              <span>Chatbot</span>
+            </a>
+          </nav>
+    
+          <!-- User profile section on the right -->
+          <div class="user-profile">
+            <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
+            <span class="user-name">{{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+          </div>
         </div>
-      </div>
-      <nav>
-        <a href="{{ url_for('home') }}" class="nav-link">
-          <span class="nav-icon">🏠</span>
-          <span>Home</span>
-        </a>
-        <a href="{{ url_for('dashboard') }}" class="nav-link">
-          <span class="nav-icon">📊</span>
-          <span>Weather Dashboard</span>
-        </a>
-        <a href="{{ url_for('chatbot') }}" class="nav-link active">
-          <span class="nav-icon">💬</span>
-          <span>Chatbot</span>
-        </a>
-      </nav>
-    </div>
-  </header>
+      </header>
 
   <div class="container">
     {% if error %}

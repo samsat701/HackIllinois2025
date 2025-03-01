@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ farm.name }} Details</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+        <div class="title-container">
+          <h1>WinifyAI</h1>
+          <span class="logo-tagline">Agricultural Intelligence</span>
+        </div>
+      </div>
+      <nav>
+        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </a>
+      </nav>
+      <div class="user-profile">
+        <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
+        <span class="user-name">{{ username }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+      </div>
+    </div>
+  </header>
+  <div class="container">
+    <h2>{{ farm.name }} ({{ farm.state }})</h2>
+    <p>{{ farm.description }}</p>
+    <h3>Equipment Details</h3>
+    <ul>
+      {% for eq in farm.equipments %}
+        <li>
+          <strong>{{ eq.name }}</strong>: {{ eq.type }}<br>
+          Working Speed: {{ eq.working_speed }}, Soil Type: {{ eq.soil_type }}, Width: {{ eq.width }}, Operating Cost: {{ eq.operating_cost }}<br>
+          Details: {{ eq.details }}
+        </li>
+      {% endfor %}
+    </ul>
+    <a href="{{ url_for('home') }}">&#8592; Back to My Farms</a>
+  </div>
+  <footer>
+    <p>WinifyAI Agricultural Weather Intelligence &copy; {{ now.year }}</p>
+  </footer>
+</body>
+</html>
