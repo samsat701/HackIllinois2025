@@ -2,13 +2,31 @@ import os
 import sqlite3
 import markdown
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv()  # Load environment variables from .env
 
-from google import genai
+# --- Gemini integration removed ---
+# from google import genai
+# gemini_api_key = os.getenv("GEMINI_API_KEY")
+# client = genai.Client(api_key=gemini_api_key)
 
-# Initialize Gemini client using API key from the .env file
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=gemini_api_key)
+# --- Azure OpenAI integration ---
+from openai import AzureOpenAI
+
+# Get the API key and endpoint from the .env file
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "{API KEY HERE}")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "https://your-openai-endpoint.openai.azure.com")
+
+client = AzureOpenAI(
+    api_key=AZURE_OPENAI_API_KEY,
+    api_version="2024-10-21",
+    azure_endpoint=AZURE_OPENAI_ENDPOINT
+)
+
+# Optionally, define your deployment endpoints
+endpoints = {
+    "gpt_40": "gpt-4o-2",
+    "gpt_o1_mini": "o1-mini"
+}
 
 from flask import Flask, render_template, request, jsonify, url_for, redirect, session, flash
 import requests
@@ -95,19 +113,14 @@ def get_user_farms(user_id):
 # ------------------------------
 # Login and Logout functionality
 # ------------------------------
-
-# Default route always redirects to the login page.
 @app.route("/")
 def index():
     return redirect(url_for("login"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Clear any existing session to prevent auto login.
     session.clear()
     if request.method == "POST":
-        # For demo purposes, we're using hard-coded credentials.
-        # In a real app, use a database and hashed passwords.
         username = request.form.get("username")
         password = request.form.get("password")
         
@@ -124,11 +137,7 @@ def logout():
     session.pop("username", None)
     return redirect(url_for("login"))
 
-# ------------------------------
-# Protected Routes (Login Required)
-# ------------------------------
 def login_required(func):
-    """Decorator to check if the user is logged in."""
     from functools import wraps
     @wraps(func)
     def decorated_view(*args, **kwargs):
@@ -137,11 +146,10 @@ def login_required(func):
         return func(*args, **kwargs)
     return decorated_view
 
-# Home route now displays farms in an accordion layout and is now at '/home'
 @app.route("/home")
 @login_required
 def home():
-    user_id = 1  # Hard-coded for demo; in production, fetch from session
+    user_id = 1  # For demo purposes; in production, fetch from session
     farms = get_user_farms(user_id)
     now = datetime.now()
     return render_template("home.html", now=now, username=session.get("username"), farms=farms)
@@ -149,18 +157,16 @@ def home():
 @app.route("/add_farm", methods=["GET", "POST"])
 @login_required
 def add_farm():
-    user_id = 1  # Hard-coded for demo; in production, retrieve from session
+    user_id = 1
     conn = get_db_connection()
     cursor = conn.cursor()
     if request.method == "POST":
-        # Get form data
         name = request.form.get("name")
         state = request.form.get("state")
         latitude = request.form.get("latitude")
         longitude = request.form.get("longitude")
         description = request.form.get("description")
         
-        # Insert new farm into the database
         cursor.execute(
             "INSERT INTO farms (user_id, name, state, latitude, longitude, description) VALUES (?, ?, ?, ?, ?, ?)",
             (user_id, name, state, latitude, longitude, description)
@@ -169,17 +175,15 @@ def add_farm():
         conn.close()
         flash("Farm added successfully!")
         return redirect(url_for("home"))
-    # Render the add farm form on GET requests
     return render_template("add_farm.html", username=session.get("username"), now=datetime.now())
 
 @app.route("/update_farm/<int:farm_id>", methods=["GET", "POST"])
 @login_required
 def update_farm(farm_id):
-    user_id = 1  # Hard-coded for demo
+    user_id = 1
     conn = get_db_connection()
     cursor = conn.cursor()
     if request.method == "POST":
-        # Update farm details
         name = request.form.get("name")
         state = request.form.get("state")
         latitude = request.form.get("latitude")
@@ -190,7 +194,6 @@ def update_farm(farm_id):
             (name, state, latitude, longitude, description, farm_id, user_id)
         )
         
-        # Update existing equipment records
         equipment_ids = request.form.getlist("equipment_ids")
         for eq_id in equipment_ids:
             eq_name = request.form.get(f"equipment_{eq_id}_name")
@@ -205,7 +208,6 @@ def update_farm(farm_id):
                 (eq_name, eq_type, eq_working_speed, eq_soil_type, eq_width, eq_operating_cost, eq_details, eq_id)
             )
         
-        # Process new equipment entries (if any)
         new_names = request.form.getlist("new_equipment_name[]")
         new_types = request.form.getlist("new_equipment_type[]")
         new_working_speeds = request.form.getlist("new_equipment_working_speed[]")
@@ -217,7 +219,6 @@ def update_farm(farm_id):
         for name, type_, ws, soil, width, op_cost, details in zip(
             new_names, new_types, new_working_speeds, new_soil_types, new_widths, new_operating_costs, new_details_list
         ):
-            # Only insert if the equipment name is provided (you could add further validation)
             if name.strip():
                 cursor.execute(
                     "INSERT INTO equipment (farm_id, name, type, working_speed, soil_type, width, operating_cost, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -229,7 +230,6 @@ def update_farm(farm_id):
         flash("Farm and equipment updated successfully.")
         return redirect(url_for("home"))
     else:
-        # GET request: fetch farm and its equipment
         farm = cursor.execute("SELECT * FROM farms WHERE id=? AND user_id=?", (farm_id, user_id)).fetchone()
         equipments = cursor.execute("SELECT * FROM equipment WHERE farm_id=?", (farm_id,)).fetchall()
         conn.close()
@@ -240,14 +240,12 @@ def update_farm(farm_id):
         farm_dict["equipments"] = [dict(eq) for eq in equipments]
         return render_template("update_farm.html", farm=farm_dict, username=session.get("username"), now=datetime.now())
 
-# Delete Farm: Removes the farm (and its associated equipment) from the database.
 @app.route("/delete_farm/<int:farm_id>")
 @login_required
 def delete_farm(farm_id):
-    user_id = 1  # Hard-coded for demo
+    user_id = 1
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Remove associated equipment first (if not using ON DELETE CASCADE)
     cursor.execute("DELETE FROM equipment WHERE farm_id=?", (farm_id,))
     cursor.execute("DELETE FROM farms WHERE id=? AND user_id=?", (farm_id, user_id))
     conn.commit()
@@ -283,9 +281,8 @@ def dashboard():
     
     if request.method == "POST":
         forecast_type = request.form.get("forecast_type")
-        selected_farm = request.form.get("farm")  # Read farm from the hidden input
+        selected_farm = request.form.get("farm")
 
-        # Determine which farm is selected and set timezone accordingly
         if selected_farm == "illinois":
             center_coords = compute_center(illinois_coords)
             tz = pytz.timezone("America/Chicago")
@@ -391,20 +388,21 @@ def get_response():
     data = request.get_json()
     user_message = data.get("message", "")
     
-    prompt = f"""
-You are an expert agriculture specialist named Randy.
-{user_message}
-"""
+    # Construct the prompt with your instructions
+    prompt = f"You are an expert agriculture specialist named Randy.\n{user_message}"
+    
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
+        messages = [{"role": "user", "content": prompt}]
+        # Use the desired deployment; here we choose "gpt_40" (adjust as needed)
+        response = client.chat.completions.create(
+            model=endpoints["gpt_o1_mini"],
+            messages=messages
         )
-        final_response = convert_markdown(response.text)
+        # Access the message content using the attribute 'content'
+        final_response = convert_markdown(response.choices[0].message.content)
     except Exception as e:
         final_response = "Sorry, I encountered an error: " + str(e)
     
     return jsonify({"response": final_response})
-
 if __name__ == "__main__":
     app.run(debug=True)
