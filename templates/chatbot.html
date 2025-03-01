@@ -33,13 +33,15 @@
             </a>
           </nav>
     
-          <!-- User profile section on the right -->
-          <div class="user-profile">
+          <div class="user-profile" id="userProfile">
             <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
-            <span class="user-name">{{ username }}</span>
-            <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+            <span class="user-name">admin</span>
+            <div class="dropdown-menu" id="userDropdown">
+              <a href="#" class="dropdown-item">Profile</a>
+              <a href="#" class="dropdown-item">Settings</a>
+              <a href="{{ url_for('logout') }}" class="dropdown-item logout">Logout</a>
+            </div>
           </div>
-        </div>
       </header>
   
   <div class="container">
@@ -186,6 +188,26 @@
         });
       });
     });
+  // User profile dropdown functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const userProfile = document.getElementById('userProfile');
+    const dropdown = document.getElementById('userDropdown');
+    
+    userProfile.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', function() {
+      dropdown.classList.remove('show');
+    });
+    
+    // Prevent dropdown from closing when clicking inside it
+    dropdown.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  });
   </script>
   </body>
 </html>
