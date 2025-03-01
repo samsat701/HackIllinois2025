@@ -30,6 +30,10 @@
                     <span class="nav-icon">💬</span>
                     <span>Chatbot</span>
                 </a>
+                <a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint == 'login' %}active{% endif %}">
+                    <span class="nav-icon">🔑</span>
+                    <span>Login</span>
+                </a>
             </nav>
         </div>
     </header>

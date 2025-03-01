@@ -1,4 +1,3 @@
-#test
 import os
 import markdown
 from dotenv import load_dotenv
@@ -202,6 +201,11 @@ def dashboard():
 def chatbot():
     now = datetime.now()
     return render_template("chatbot.html", now=now)
+
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
 
 @app.route("/get_response", methods=["POST"])
 def get_response():
