@@ -954,3 +954,58 @@ footer {
 .forecast-data h1 {
   text-align: center;
 }
+
+
+.swipe-container {
+  display: flex;                     /* Arrange cards in a row */
+  overflow-x: auto;                  /* Enable horizontal scrolling */
+  scroll-snap-type: x mandatory;     /* Snap to each card */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  gap: 20px;                         /* Space between cards */
+  padding: 20px;
+}
+
+/* Adjust forecast cards within the swipe container */
+.swipe-container .weather-card {
+  flex: 0 0 auto;          
+  scroll-snap-align: start; 
+  width: 280px;             
+}
+
+
+.swipe-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Arrow Buttons for navigation 
+.swipe-btn {
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 10;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+/* Position the previous button on the left 
+.swipe-btn.prev {
+  position: absolute;
+  left: 10px;
+}
+
+/* Position the next button on the right 
+.swipe-btn.next {
+  position: absolute;
+  right: 10px;
+}
+
+/* Optional: Hover effect for arrow buttons 
+.swipe-btn:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+*/

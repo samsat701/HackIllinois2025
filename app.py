@@ -146,7 +146,7 @@ def dashboard():
                             continue
                         if dt >= current_time:
                             forecast_data.append({
-                                "time": dt.strftime("%Y-%m-%d %H:%M"),
+                                "date": dt.strftime("%A, %B %d, %Y, %I:%M %p"),
                                 "temperature": temp,
                                 "relative_humidity": rh,
                                 "dew_point": dp,
@@ -177,8 +177,11 @@ def dashboard():
                         daily.get("wind_speed_10m_max", []),
                         daily.get("uv_index_max", [])
                     ):
+
+                        dt_obj = datetime.strptime(t, "%Y-%m-%d")
+                        readable_date = dt_obj.strftime("%A, %B %d, %Y")
                         forecast_data.append({
-                            "date": t,
+                            "date": readable_date,
                             "temp_max": tmax,
                             "temp_min": tmin,
                             "precipitation_sum": precip_sum,
