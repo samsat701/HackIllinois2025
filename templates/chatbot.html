@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinifyAI | Agricultural Chatbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo-container">
+                <h1>WinifyAI</h1>
+                <span class="logo-tagline">Agricultural Intelligence</span>
+            </div>
+            <nav>
+                <a href="{{ url_for('home') }}" class="nav-link">
+                    <span class="nav-icon">🏠</span>
+                    <span>Home</span>
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    <span>Weather Dashboard</span>
+                </a>
+                <a href="{{ url_for('chatbot') }}" class="nav-link active">
+                    <span class="nav-icon">💬</span>
+                    <span>Chatbot</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="chatbot-container">
+            <div class="chat-header">
+                <h2>Agricultural Assistant</h2>
+                <p>Ask me anything about farming, weather, and crop management</p>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <p>Hello! I'm your agricultural assistant. How can I help you today?</p>
+                    </div>
+                </div>
+                <!-- Messages will be added here dynamically -->
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" id="user-input" placeholder="Type your question here..." class="chat-input">
+                <button id="send-button" class="send-button">
+                    <span class="send-icon">📤</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="chat-suggestions">
+            <h3>Suggested Questions</h3>
+            <div class="suggestion-buttons">
+                <button class="suggestion-btn">When should I plant corn?</button>
+                <button class="suggestion-btn">How much rainfall is expected this week?</button>
+                <button class="suggestion-btn">What's the best time to apply fertilizer?</button>
+                <button class="suggestion-btn">How do I manage soil moisture?</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>WinifyAI Agricultural Weather Intelligence &copy; {{ now.year }}</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const suggestionButtons = document.querySelectorAll('.suggestion-btn');
+            
+            function addMessage(message, isUser) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = isUser ? 'message user-message' : 'message bot-message';
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                
+                const messagePara = document.createElement('p');
+                messagePara.textContent = message;
+                
+                messageContent.appendChild(messagePara);
+                messageDiv.appendChild(messageContent);
+                chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            function handleUserMessage(message) {
+                if (!message.trim()) return;
+                
+                // Add user message
+                addMessage(message, true);
+                
+                // Clear input
+                userInput.value = '';
+                
+                // Simulate bot response (replace with actual API call in production)
+                setTimeout(() => {
+                    const botResponses = [
+                        "I'm analyzing the agricultural data for your query.",
+                        "Based on current weather patterns, I recommend monitoring soil moisture levels.",
+                        "The forecast indicates favorable conditions for planting in the coming week.",
+                        "Consider adjusting irrigation schedules based on the expected precipitation.",
+                        "Our data suggests optimal timing for fertilizer application would be early morning."
+                    ];
+                    const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)];
+                    addMessage(randomResponse, false);
+                }, 1000);
+            }
+            
+            // Event listeners
+            sendButton.addEventListener('click', () => {
+                handleUserMessage(userInput.value);
+            });
+            
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleUserMessage(userInput.value);
+                }
+            });
+            
+            suggestionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    handleUserMessage(button.textContent);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

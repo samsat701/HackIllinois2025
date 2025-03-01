@@ -5,14 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agriculture Weather Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Reference your existing stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <header>
-        <div class="header-content">
-            <h1>WinifyAI</h1>
+        <div class="header-container">
+            <div class="logo-container">
+                <h1>WinifyAI</h1>
+                <span class="logo-tagline">Agricultural Intelligence</span>
+            </div>
+            <nav>
+                <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+                    <span class="nav-icon">🏠</span>
+                    <span>Home</span>
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Weather Dashboard</span>
+                </a>
+                <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
+                    <span class="nav-icon">💬</span>
+                    <span>Chatbot</span>
+                </a>
+            </nav>
         </div>
     </header>
+    
     
     <div class="container">
         <div class="form-section">

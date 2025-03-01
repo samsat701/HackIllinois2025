@@ -53,7 +53,12 @@ def map_weather_icon(weathercode):
     else:
         return "default.png"
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
+def home():
+    now = datetime.now()
+    return render_template("home.html", now=now)
+
+@app.route("/weather", methods=["GET", "POST"])
 def dashboard():
     forecast_data = None
     center_coords = None
@@ -65,6 +70,13 @@ def dashboard():
         {"lat": 40.8663889, "lon": -88.6680556},
         {"lat": 40.8638889, "lon": -88.6705556},
         {"lat": 40.8638889, "lon": -88.6680556}
+    ]
+
+    north_dakota_coords = [
+        {"lat": 46.8688889, "lon": -97.2844444},  # 46°52'08"N, 97°17'04"W
+        {"lat": 46.8686111, "lon": -97.2741667},  # 46°52'07"N, 97°16'27"W
+        {"lat": 46.8750000, "lon": -97.2741667},  # 46°52'30"N, 97°16'27"W
+        {"lat": 46.8750000, "lon": -97.2844444}   # 46°52'30"N, 97°17'04"W
     ]
     
     if request.method == "POST":
@@ -151,6 +163,11 @@ def dashboard():
                            forecast_type=forecast_type,
                            error=error,
                            now=now)
+
+@app.route("/chatbot")
+def chatbot():
+    now = datetime.now()
+    return render_template("chatbot.html", now=now)
 
 if __name__ == "__main__":
     app.run(debug=True)
