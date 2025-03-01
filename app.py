@@ -4,15 +4,8 @@ import markdown
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env
 
-# --- Gemini integration removed ---
-# from google import genai
-# gemini_api_key = os.getenv("GEMINI_API_KEY")
-# client = genai.Client(api_key=gemini_api_key)
-
-# --- Azure OpenAI integration ---
 from openai import AzureOpenAI
 
-# Get the API key and endpoint from the .env file
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "{API KEY HERE}")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "https://your-openai-endpoint.openai.azure.com")
 
@@ -265,7 +258,6 @@ def dashboard():
     forecast_type = None
     error = None
 
-    # Define farm coordinates
     illinois_coords = [
         {"lat": 40.8663889, "lon": -88.6705556},
         {"lat": 40.8663889, "lon": -88.6680556},
@@ -391,12 +383,11 @@ def get_response():
     image_type = data.get("image_type", "image/jpeg")  # default to JPEG if not provided
 
     # Construct the text prompt
-    text_prompt = f"You are an expert agriculture specialist named Randy.\n{user_message}"
+    text_prompt = f"You are an expert agriculture specialist named Agriana Agco (nicknamed Aggie).\n{user_message}"
     
     # Build the messages content array:
     message_content = [{"type": "text", "text": text_prompt}]
     if image_base64:
-        # Build the data URL for the image
         image_data_url = f"data:{image_type};base64,{image_base64}"
         message_content.append({
             "type": "image_url",
@@ -406,12 +397,8 @@ def get_response():
     messages = [{"role": "user", "content": message_content}]
     
     try:
-        # Select model based on presence of image input
-        if image_base64:
-            selected_model = endpoints["gpt_40"]
-        else:
-            #selected_model = endpoints["gpt_o1_mini"]
-            selected_model = endpoints["gpt_40"]
+        # For now, we always use the gpt_40 model.
+        selected_model = endpoints["gpt_40"]
         
         response = client.chat.completions.create(
             model=selected_model,
@@ -419,11 +406,9 @@ def get_response():
             max_completion_tokens=300,
         )
         
-        # Log the raw API response for debugging
         app.logger.debug("AzureOpenAI API response for model %s: %s", selected_model, response)
         print("DEBUG: API response for model", selected_model, ":", response)
         
-        # Extract the message content
         message_content_response = None
         if response.choices and hasattr(response.choices[0], "message"):
             message_content_response = response.choices[0].message.content
@@ -431,17 +416,18 @@ def get_response():
             app.logger.debug("Response structure unexpected for model %s: %s", selected_model, response)
             print("DEBUG: Unexpected response structure for model", selected_model, ":", response)
         
-        # Log if blank text is received
         if not message_content_response:
             app.logger.debug("Blank text received in API response for model %s. Full response: %s", selected_model, response)
             print("DEBUG: Blank text received for model", selected_model, "Full response:", response)
         
-        final_response = convert_markdown(message_content_response or "")
+        # Use raw text without markdown conversion for voice output.
+        final_response = message_content_response or ""
     except Exception as e:
         final_response = "Sorry, I encountered an error: " + str(e)
         app.logger.error("Error during API call: %s", e)
         print("DEBUG: Exception occurred:", e)
     
+    # Return the response text; the client will handle speaking if enabled.
     return jsonify({"response": final_response})
 
 if __name__ == "__main__":

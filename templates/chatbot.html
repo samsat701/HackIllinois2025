@@ -50,6 +50,11 @@
       <div class="chat-header">
         <h2>Agricultural Assistant</h2>
         <p>Ask me anything about farming, weather, and crop management</p>
+        <!-- TTS toggle for client-side speech -->
+        <div class="tts-toggle">
+          <label for="tts-toggle">Speak Response (Client-side):</label>
+          <input type="checkbox" id="tts-toggle">
+        </div>
       </div>
       
       <div class="chat-messages" id="chat-messages">
@@ -58,12 +63,10 @@
             <p>Hello! I'm your agricultural assistant. How can I help you today?</p>
           </div>
         </div>
-        <!-- Chat messages will appear here -->
       </div>
       
       <div class="chat-input-container">
         <input type="text" id="user-input" placeholder="Type your question here..." class="chat-input">
-        <!-- File input for image upload -->
         <label for="image-input" class="image-upload-btn">
           <span class="upload-icon">📷</span>
         </label>
@@ -98,7 +101,6 @@
       const imageUploadBtn = document.querySelector('.image-upload-btn');
       const suggestionButtons = document.querySelectorAll('.suggestion-btn');
       
-      // Function to add a message to the chat window
       function addMessage(message, isUser) {
         const messageDiv = document.createElement('div');
         messageDiv.className = isUser ? 'message user-message' : 'message bot-message';
@@ -110,17 +112,15 @@
         if (isUser) {
           messagePara.textContent = message;
         } else {
-          messagePara.innerHTML = message;  // Allow HTML for bot messages
+          messagePara.innerHTML = message;
         }
         
         messageContent.appendChild(messagePara);
         messageDiv.appendChild(messageContent);
         chatMessages.appendChild(messageDiv);
-        // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
       
-      // Function to show typing indicator
       function showTypingIndicator() {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'message bot-message';
@@ -128,18 +128,15 @@
         
         const typingContent = document.createElement('div');
         typingContent.className = 'typing-indicator';
-        // Create three dots
         for (let i = 0; i < 3; i++) {
           const dot = document.createElement('span');
           typingContent.appendChild(dot);
         }
         typingDiv.appendChild(typingContent);
         chatMessages.appendChild(typingDiv);
-        // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
       
-      // Function to remove typing indicator
       function removeTypingIndicator() {
         const typingIndicator = document.getElementById('typing-indicator');
         if (typingIndicator) {
@@ -147,10 +144,10 @@
         }
       }
       
-      // Function to send message (with optional image) to the backend
       function sendMessage(message, imageBase64, imageType) {
         showTypingIndicator();
         const payload = { message: message };
+        
         if (imageBase64) {
           payload.image = imageBase64;
           payload.image_type = imageType;
@@ -165,6 +162,13 @@
         .then(data => {
           removeTypingIndicator();
           addMessage(data.response, false);
+          
+          // If TTS toggle is enabled, use the browser's SpeechSynthesis API to speak the response
+          const ttsToggle = document.getElementById('tts-toggle');
+          if (ttsToggle && ttsToggle.checked) {
+            const utterance = new SpeechSynthesisUtterance(data.response);
+            window.speechSynthesis.speak(utterance);
+          }
         })
         .catch(err => {
           removeTypingIndicator();
@@ -172,30 +176,23 @@
         });
       }
       
-      // Handle user message submission including image input
       function handleUserMessage(message) {
-        // If no text and no image, do nothing
         if (!message.trim() && imageInput.files.length === 0) return;
         
-        // Display text message immediately if available
         if (message.trim()) {
           addMessage(message, true);
         }
         userInput.value = '';
         
-        // Check if an image file is selected
         if (imageInput.files.length > 0) {
           const file = imageInput.files[0];
           const reader = new FileReader();
           reader.onloadend = function() {
-            // Extract the Base64 string (remove the prefix)
             const base64String = reader.result.split(',')[1];
             sendMessage(message, base64String, file.type);
-            imageInput.value = ''; // Clear file input
+            imageInput.value = '';
             imageUploadBtn.classList.remove('file-selected');
             imageUploadBtn.innerHTML = '<span class="upload-icon">📷</span>';
-            
-            // Remove image preview if it exists
             const preview = document.getElementById('image-preview');
             if (preview) {
               preview.remove();
@@ -203,12 +200,10 @@
           };
           reader.readAsDataURL(file);
         } else {
-          // Send text-only message
           sendMessage(message, null, null);
         }
       }
       
-      // Event listeners for send button and Enter key
       sendButton.addEventListener('click', () => {
         handleUserMessage(userInput.value);
       });
@@ -219,25 +214,19 @@
         }
       });
       
-      // Handle suggested question buttons
       suggestionButtons.forEach(button => {
         button.addEventListener('click', () => {
           handleUserMessage(button.textContent);
         });
       });
       
-      // Handle image input change
       imageInput.addEventListener('change', function() {
         if (this.files.length > 0) {
           imageUploadBtn.classList.add('file-selected');
           imageUploadBtn.innerHTML = '<span class="upload-icon">✓</span>';
-          
-          // Create image preview
           const file = this.files[0];
           const reader = new FileReader();
-          
           reader.onload = function(e) {
-            // Create preview element if it doesn't exist
             let preview = document.getElementById('image-preview');
             if (!preview) {
               preview = document.createElement('div');
@@ -245,13 +234,10 @@
               preview.className = 'image-preview';
               document.querySelector('.chat-input-container').prepend(preview);
             }
-            
             preview.innerHTML = `
               <img src="${e.target.result}" alt="Preview">
               <button class="remove-image">×</button>
             `;
-            
-            // Add event listener to remove button
             document.querySelector('.remove-image').addEventListener('click', function(e) {
               e.stopPropagation();
               preview.remove();
@@ -260,7 +246,6 @@
               imageUploadBtn.innerHTML = '<span class="upload-icon">📷</span>';
             });
           };
-          
           reader.readAsDataURL(file);
         } else {
           imageUploadBtn.classList.remove('file-selected');
@@ -269,7 +254,6 @@
       });
     });
     
-    // User profile dropdown functionality
     document.addEventListener('DOMContentLoaded', function() {
       const userProfile = document.getElementById('userProfile');
       const dropdown = document.getElementById('userDropdown');
@@ -279,12 +263,10 @@
         dropdown.classList.toggle('show');
       });
       
-      // Close dropdown when clicking elsewhere
       document.addEventListener('click', function() {
         dropdown.classList.remove('show');
       });
       
-      // Prevent dropdown from closing when clicking inside it
       dropdown.addEventListener('click', function(e) {
         e.stopPropagation();
       });
