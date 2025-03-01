@@ -387,22 +387,62 @@ def chatbot():
 def get_response():
     data = request.get_json()
     user_message = data.get("message", "")
+    image_base64 = data.get("image", None)
+    image_type = data.get("image_type", "image/jpeg")  # default to JPEG if not provided
+
+    # Construct the text prompt
+    text_prompt = f"You are an expert agriculture specialist named Randy.\n{user_message}"
     
-    # Construct the prompt with your instructions
-    prompt = f"You are an expert agriculture specialist named Randy.\n{user_message}"
+    # Build the messages content array:
+    message_content = [{"type": "text", "text": text_prompt}]
+    if image_base64:
+        # Build the data URL for the image
+        image_data_url = f"data:{image_type};base64,{image_base64}"
+        message_content.append({
+            "type": "image_url",
+            "image_url": {"url": image_data_url, "detail": "auto"}
+        })
+
+    messages = [{"role": "user", "content": message_content}]
     
     try:
-        messages = [{"role": "user", "content": prompt}]
-        # Use the desired deployment; here we choose "gpt_40" (adjust as needed)
+        # Select model based on presence of image input
+        if image_base64:
+            selected_model = endpoints["gpt_40"]
+        else:
+            #selected_model = endpoints["gpt_o1_mini"]
+            selected_model = endpoints["gpt_40"]
+        
         response = client.chat.completions.create(
-            model=endpoints["gpt_o1_mini"],
-            messages=messages
+            model=selected_model,
+            messages=messages,
+            max_completion_tokens=300,
         )
-        # Access the message content using the attribute 'content'
-        final_response = convert_markdown(response.choices[0].message.content)
+        
+        # Log the raw API response for debugging
+        app.logger.debug("AzureOpenAI API response for model %s: %s", selected_model, response)
+        print("DEBUG: API response for model", selected_model, ":", response)
+        
+        # Extract the message content
+        message_content_response = None
+        if response.choices and hasattr(response.choices[0], "message"):
+            message_content_response = response.choices[0].message.content
+        else:
+            app.logger.debug("Response structure unexpected for model %s: %s", selected_model, response)
+            print("DEBUG: Unexpected response structure for model", selected_model, ":", response)
+        
+        # Log if blank text is received
+        if not message_content_response:
+            app.logger.debug("Blank text received in API response for model %s. Full response: %s", selected_model, response)
+            print("DEBUG: Blank text received for model", selected_model, "Full response:", response)
+        
+        final_response = convert_markdown(message_content_response or "")
     except Exception as e:
         final_response = "Sorry, I encountered an error: " + str(e)
+        app.logger.error("Error during API call: %s", e)
+        print("DEBUG: Exception occurred:", e)
     
     return jsonify({"response": final_response})
+
 if __name__ == "__main__":
     app.run(debug=True)
