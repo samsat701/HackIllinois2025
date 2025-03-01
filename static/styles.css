@@ -21,7 +21,7 @@
 }
 
 body {
-  font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+  font-family: 'Montserrat', 'Segoe UI', 'Open Sans', sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
   line-height: 1.6;
@@ -32,12 +32,53 @@ body {
   flex-direction: column;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  flex: 1;
+
+
+/*adding contianers for a more Apple like design*/
+.weather-container {
+  display: grid;
+  /*background-color: #2fb567;*/
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adjusts based on screen size */
+    gap: 20px;
+    padding: 20px;
 }
+
+
+/*different cards*/
+.weather-card {
+  background: linear-gradient(135deg, #b5ebb6, #3e7c2e); /* Smooth green gradient */
+  color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/*details*/
+.weather-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+
+/*weather properties*/
+.temperature, .precipitation, .wind, .uv-index, .humidity {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  border-radius: var(--border-radius);
+  margin: 5px 0;
+  font-weight: 500;
+}
+
+
 
 /* Header and Navigation Styles */
 header {
@@ -127,6 +168,15 @@ h3 {
   font-size: 1.4rem;
   color: var(--primary-dark);
   margin-bottom: 15px;
+}
+
+.forecast-date {
+  font-family: 'Montserrat', 'Segoe UI', 'Open Sans', sans-serif; /* or your preferred font */
+  font-size: 1.6rem;       /* Adjust the size as needed */
+  font-weight: 600;        /* Make it a bit bolder */
+  color: #0d3f08;          /* Example: a gold color for a distinct look */
+  margin-bottom: 15px;     /* Keep spacing consistent */
+  
 }
 
 .dashboard-card {
@@ -383,7 +433,7 @@ tr:hover {
   transform: translateY(-2px);
 }
 
-/* Weather condition styling */
+/* Weather condition styling 
 .temp-high {
   color: #FF5722;
   font-weight: bold;
@@ -398,6 +448,8 @@ tr:hover {
   color: #0D47A1;
   font-weight: bold;
 }
+
+*/
 
 /* Animation for data loading */
 @keyframes fadeIn {
@@ -893,7 +945,12 @@ footer {
   border-color: var(--secondary-color);
   transform: scale(1.02);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+} 
+
+.forecast-data h2 {
+  text-align: center;
 }
 
-
-
+.forecast-data h1 {
+  text-align: center;
+}

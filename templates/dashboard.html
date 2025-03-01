@@ -99,80 +99,48 @@
       </div>
     {% endif %}
 
+
+
+     <!-- updatied forecast design -->
     {% if forecast_data %}
-      <div class="forecast-data">
-        {% if forecast_type == "hourly" %}
-          <h2>Hourly Forecast (Next 24 Hours)</h2>
-          <div class="table-container">
-            <table>
-              <tr>
-                <th>Time</th>
-                <th>Temp (°C)</th>
-                <th>RH (%)</th>
-                <th>Dew Pt (°C)</th>
-                <th>Prec (mm)</th>
-                <th>P%</th>
-                <th>Rain (mm)</th>
-                <th>Showers (mm)</th>
-                <th>Snow (mm)</th>
-                <th>WCode</th>
-                <th>Icon</th>
-                <th>SoilT0 (°C)</th>
-                <th>SoilM0</th>
-                <th>Wind (km/h)</th>
-                <th>WGust (km/h)</th>
-              </tr>
-              {% for entry in forecast_data %}
-              <tr>
-                <td>{{ entry.time }}</td>
-                <td>{{ entry.temperature }}</td>
-                <td>{{ entry.relative_humidity }}</td>
-                <td>{{ entry.dew_point }}</td>
-                <td>{{ entry.precipitation }}</td>
-                <td>{{ entry.precip_prob }}</td>
-                <td>{{ entry.rain }}</td>
-                <td>{{ entry.showers }}</td>
-                <td>{{ entry.snowfall }}</td>
-                <td>{{ entry.weathercode }}</td>
-                <td>
-                  <img class="icon" src="{{ url_for('static', filename='icons/' ~ entry.weather_icon) }}" alt="Icon">
-                </td>
-                <td>{{ entry.soil_temperature_0 }}</td>
-                <td>{{ entry.soil_moisture_0 }}</td>
-                <td>{{ entry.wind_speed }}</td>
-                <td>{{ entry.wind_gusts }}</td>
-              </tr>
-              {% endfor %}
-            </table>
+    <div class="forecast-data">
+
+      {% if forecast_type == "hourly" %}
+        <h2>Hourly Forecast (Next 24 Hours)</h2>
+        <div class="weather-container">
+          {% for entry in forecast_data %}
+          <div class="weather-card">
+            <h3>{{ entry.time }}</h3>
+            <div class="weather-details">
+              <div class="temperature">🌡️ Temp: <strong>{{ entry.temperature }}°C</strong></div>
+              <div class="precipitation">🌧️ Precip: <strong>{{ entry.precipitation }} mm</strong></div>
+              <div class="humidity">💧 RH: <strong>{{ entry.relative_humidity }}%</strong></div>
+              <div class="wind">💨 Wind: <strong>{{ entry.wind_speed }} km/h</strong></div>
+            </div>
           </div>
-        {% elif forecast_type == "daily" %}
-          <h2>Daily Forecast (Next 7 Days)</h2>
-          <div class="table-container">
-            <table>
-              <tr>
-                <th>Date</th>
-                <th>Max Temp (°C)</th>
-                <th>Min Temp (°C)</th>
-                <th>Precip (mm)</th>
-                <th>Max Wind (km/h)</th>
-                <th>UV Index</th>
-              </tr>
-              {% for entry in forecast_data %}
-              <tr>
-                <td>{{ entry.date }}</td>
-                <td class="{% if entry.temp_max > 30 %}temp-high{% endif %}">{{ entry.temp_max }}</td>
-                <td class="{% if entry.temp_min < 5 %}temp-low{% endif %}">{{ entry.temp_min }}</td>
-                <td class="{% if entry.precipitation_sum > 10 %}precip-high{% endif %}">{{ entry.precipitation_sum }}</td>
-                <td>{{ entry.wind_speed_max }}</td>
-                <td>{{ entry.uv_index }}</td>
-              </tr>
-              {% endfor %}
-            </table>
+          {% endfor %}
+        </div>
+      
+      {% elif forecast_type == "daily" %}
+        <h2>Daily Forecast (Next 7 Days)</h2>
+        <div class="weather-container">
+          {% for entry in forecast_data %}
+          <div class="weather-card">
+            <h3 class="forecast-date">{{ entry.date }}</h3>
+            <div class="weather-details">
+              <div class="temperature">🌡️ Max: <strong>{{ entry.temp_max }}°C</strong> / Min: <span class="low-temp">{{ entry.temp_min }}°C</span></div>
+              <div class="precipitation">🌧️ Precip: <strong>{{ entry.precipitation_sum }} mm</strong></div>
+              <div class="wind">💨 Wind: <strong>{{ entry.wind_speed_max }} km/h</strong></div>
+              <div class="uv-index">☀️ UV Index: <strong>{{ entry.uv_index }}</strong></div>
+            </div>
           </div>
-        {% endif %}
-      </div>
-    {% endif %}
-  </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div> <!-- Closes .forecast-data -->
+  {% endif %}
+
+
 
   <footer>
     <p>Agriculture Weather Dashboard &copy; {{ now.year }}</p>
