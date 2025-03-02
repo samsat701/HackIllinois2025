@@ -41,14 +41,11 @@ Our team recognized that farming is an intricate balance between unpredictable w
 
 ## Challenges We Ran Into
 
-- **Data Integration:**  
-  Combining diverse data streams (weather, soil metrics, equipment details, and farm-specific information) into a cohesive recommendation engine required overcoming significant normalization and synchronization challenges.
+1. Combining diverse data streams (weather, soil metrics, equipment details, and farm-specific information) into a cohesive recommendation engine required overcoming significant normalization and synchronization challenges.
 
-- **Prompt Tuning:**  
-  Generating accurate, context-aware, multi-faceted agricultural advice demanded extensive iteration in tuning prompts and managing responses.
+2. Generating accurate, context-aware, multi-faceted agricultural advice demanded extensive iteration in tuning prompts and managing responses.
 
-- **Multi-Modal Input Handling:**  
-  Ensuring seamless input and output via text, voice, and images involved tackling issues with API selection, voice recognition accuracy, and image preprocessing.
+3. Ensuring seamless input and output via text, voice, and images involved tackling issues with API selection, voice recognition accuracy, and image preprocessing.
 
 ## Accomplishments That We're Proud Of
 
@@ -60,17 +57,13 @@ Participating in the hackathon was an enriching experience that pushed our techn
 
 ## What's Next for AG-GO: Smarter Fields, Bigger Yields
 
-- **Enhanced Notifications:**  
-  We have implemented basic notifications to alert users when conditions are optimal for farming activities. Next, we plan to integrate SMS/Email APIs for a more robust alert system.
+- We have implemented basic notifications to alert users when conditions are optimal for farming activities. Next, we plan to integrate SMS/Email APIs for a more robust alert system.
 
-- **Sustainable Practices Incentives:**  
-  Develop a system that promotes sustainable practices by rewarding farmers (e.g., with tax breaks) for farming at optimal times.
+- Develop a system that promotes sustainable practices by rewarding farmers (e.g., with tax breaks) for farming at optimal times.
 
-- **Live Sensor Integration:**  
-  Integrate directly with on-field sensors to incorporate live data into our dashboard, further refining our recommendations.
+- Integrate directly with on-field sensors to incorporate live data into our dashboard, further refining our recommendations.
 
-- **Community Features:**  
-  Introduce social and collaborative features that allow farmers to share best practices, success stories, and insights, fostering a global farming community.
+- Introduce social and collaborative features that allow farmers to share best practices, success stories, and insights, fostering a global farming community.
 
 ## Getting Started
 
