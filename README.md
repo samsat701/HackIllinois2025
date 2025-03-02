@@ -1,1 +1,1 @@
-# HackIllinois2025
+# AG-GO
