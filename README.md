@@ -1,5 +1,12 @@
 # AG-GO: AI-Powered Farm Management Platform
 
+## Demo Video
+
+Watch the AG-GO demo below:
+
+<iframe width="560" height="315" src="https://youtu.be/aHZYn5ATfnA" title="AG-GO Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
 ## Inspiration
 
 Modern agriculture is facing heavy uncertainty: whether it's climate, soil degradation, or resource scarcity, all of these are becoming challenges to traditional farming methods. Due to this, countless farmers are left with fragmented data and outdated practices. These challenges are even more prominent in developing countries, where limited access to advanced tools and timely information can hinder productivity and sustainable practices.
