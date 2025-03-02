@@ -601,20 +601,6 @@ footer {
   border-color: var(--primary-color);
 }
 
-.send-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  margin-left: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s, transform 0.2s;
-}
 
 .send-button:hover {
   background-color: var(--primary-dark);
@@ -984,42 +970,9 @@ footer {
   font-size: 14px;
 }
 
-.image-upload-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background-color: #f0f0f0;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.image-upload-btn:hover {
-  background-color: #e0e0e0;
-}
 
 .upload-icon {
   font-size: 18px;
-}
-
-.send-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.send-button:hover {
-  background-color: #45a049;
 }
 
 .image-preview {
@@ -1057,3 +1010,168 @@ footer {
   background-color: #e6f7e6;
   border: 1px solid #4CAF50;
 }
+
+.message-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
+}
+
+.bot-message {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.message-content p {
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.bot-message .message-content ol {
+  padding-left: 2rem;  /* Adds padding to shift numbered lists to the right */
+  margin: 0.5rem 0;
+}
+
+.bot-message .message-content ul {
+  padding-left: 2rem;  /* Adds padding for bullet points too */
+  margin: 0.5rem 0;
+}
+
+.bot-message .message-content li {
+  margin-bottom: 0.25rem;
+}
+
+.tts-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.15);
+  padding: 8px 12px;
+  border-radius: 20px;
+}
+
+.tts-toggle label {
+  color: var(--light-text);
+  font-size: 0.9rem;
+  margin-right: 10px;
+  font-weight: 500;
+}
+
+.tts-toggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 40px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tts-toggle input[type="checkbox"]:checked {
+  background-color: var(--secondary-color);
+}
+
+.tts-toggle input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.tts-toggle input[type="checkbox"]:checked::before {
+  transform: translateX(20px);
+}
+
+/* Unified button styling for chat input container */
+.chat-input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+  border-radius: 0 0 8px 8px;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+/* Icon styling */
+.upload-icon,
+.send-icon,
+.record-icon {
+  font-size: 18px;
+}
+
+/* Active state for recording button */
+.record-button.recording {
+  background-color: #ef5350; /* Red background when recording */
+  color: white;
+}
+
+
+.image-upload-btn,
+.send-button,
+.record-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0; /* Remove any default padding */
+  border: none;
+  border-radius: 50%; /* Ensures a perfect circle */
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+/* Camera button styling */
+.image-upload-btn {
+  background-color: #bbdefb; /* Light green */
+  color: #2E7D32; /* Dark green icon */
+}
+
+.image-upload-btn:hover {
+  background-color: #90caf9;
+  transform: scale(1.05);
+}
+
+/* Send/upload button styling */
+.send-button {
+  background-color: #c8e6c9; /* Light blue */
+  color: #1565c0; /* Dark blue icon */
+}
+
+.send-button:hover {
+  background-color: #a5d6a7;
+  transform: scale(1.05);
+}
+
+/* Microphone button styling */
+.record-button {
+  background-color: #ffccbc; /* Light orange/coral */
+  color: #e64a19; /* Dark orange icon */
+}
+
+.record-button:hover {
+  background-color: #ffab91;
+  transform: scale(1.05);
+}
+

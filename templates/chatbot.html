@@ -6,6 +6,8 @@
   <title>WinifyAI | Agricultural Chatbot</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <!-- Include marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <header>
@@ -13,7 +15,7 @@
       <div class="logo-container">
         <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
         <div class="title-container">
-          <h1>WinifyAI</h1>
+          <h1>AG-GO</h1>
           <span class="logo-tagline">Agricultural Intelligence</span>
         </div>
       </div>
@@ -52,7 +54,7 @@
         <p>Ask me anything about farming, weather, and crop management</p>
         <!-- TTS toggle for client-side speech -->
         <div class="tts-toggle">
-          <label for="tts-toggle">Speak Response (Client-side):</label>
+          <label for="tts-toggle">AI Voice</label>
           <input type="checkbox" id="tts-toggle">
         </div>
       </div>
@@ -64,15 +66,21 @@
           </div>
         </div>
       </div>
-      
       <div class="chat-input-container">
+        <!-- Text input -->
         <input type="text" id="user-input" placeholder="Type your question here..." class="chat-input">
+        <!-- Image upload -->
         <label for="image-input" class="image-upload-btn">
           <span class="upload-icon">📷</span>
         </label>
         <input type="file" id="image-input" accept="image/*" style="display: none;">
+        <!-- Send button -->
         <button id="send-button" class="send-button">
           <span class="send-icon">📤</span>
+        </button>
+        <!-- New Record button for speech input -->
+        <button id="record-button" class="record-button">
+          <span class="record-icon">🎤</span>
         </button>
       </div>
     </div>
@@ -100,7 +108,10 @@
       const imageInput = document.getElementById('image-input');
       const imageUploadBtn = document.querySelector('.image-upload-btn');
       const suggestionButtons = document.querySelectorAll('.suggestion-btn');
-      
+      const recordButton = document.getElementById('record-button');
+      let mediaRecorder;
+      let audioChunks = [];
+
       function addMessage(message, isUser) {
         const messageDiv = document.createElement('div');
         messageDiv.className = isUser ? 'message user-message' : 'message bot-message';
@@ -112,7 +123,8 @@
         if (isUser) {
           messagePara.textContent = message;
         } else {
-          messagePara.innerHTML = message;
+          // Convert Markdown to HTML using marked.js
+          messagePara.innerHTML = marked.parse(message);
         }
         
         messageContent.appendChild(messagePara);
@@ -163,7 +175,7 @@
           removeTypingIndicator();
           addMessage(data.response, false);
           
-          // If TTS toggle is enabled, use the browser's SpeechSynthesis API to speak the response
+          // If TTS toggle is enabled, use SpeechSynthesis API to speak the response
           const ttsToggle = document.getElementById('tts-toggle');
           if (ttsToggle && ttsToggle.checked) {
             const utterance = new SpeechSynthesisUtterance(data.response);
@@ -250,6 +262,56 @@
         } else {
           imageUploadBtn.classList.remove('file-selected');
           imageUploadBtn.innerHTML = '<span class="upload-icon">📷</span>';
+        }
+      });
+      
+      // RECORD BUTTON FUNCTIONALITY FOR SPEECH-TO-TEXT
+      recordButton.addEventListener('click', function() {
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+              mediaRecorder = new MediaRecorder(stream);
+              mediaRecorder.start();
+              recordButton.innerText = "Stop Recording";
+              audioChunks = [];
+              
+              mediaRecorder.addEventListener("dataavailable", event => {
+                audioChunks.push(event.data);
+              });
+              
+              mediaRecorder.addEventListener("stop", () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = function() {
+                  const base64data = reader.result.split(',')[1];
+                  fetch("/speech_to_text", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ audio: base64data })
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.text) {
+                      userInput.value = data.text;
+                      handleUserMessage(userInput.value);
+                    } else {
+                      addMessage("Speech recognition failed.", false);
+                    }
+                  })
+                  .catch(err => {
+                    addMessage("Error processing speech.", false);
+                  });
+                };
+              });
+            })
+            .catch(err => {
+              console.error("Microphone access error:", err);
+              addMessage("Microphone access denied.", false);
+            });
+        } else if (mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+          recordButton.innerText = "Start Recording";
         }
       });
     });

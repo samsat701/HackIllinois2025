@@ -4,6 +4,11 @@ import markdown
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env
 
+import base64
+import io
+import speech_recognition as sr
+from pydub import AudioSegment
+
 from openai import AzureOpenAI
 
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "{API KEY HERE}")
@@ -338,10 +343,10 @@ def dashboard():
                 elif forecast_type == "daily":
                     weather = get_weather(center_coords[0], center_coords[1], forecast_type="daily")
                     daily = weather.get("daily", {})
-                    times = daily.get("time", [])
                     forecast_data = []
+                    count = 0
                     for t, tmax, tmin, precip_sum, wind_max, uv in zip(
-                        times,
+                        daily.get("time", []),
                         daily.get("temperature_2m_max", []),
                         daily.get("temperature_2m_min", []),
                         daily.get("precipitation_sum", []),
@@ -356,6 +361,9 @@ def dashboard():
                             "wind_speed_max": wind_max,
                             "uv_index": uv
                         })
+                        count += 1
+                        if count >= 7:  # Limit to 7 days forecast
+                            break
             except Exception as e:
                 error = str(e)
             
@@ -371,64 +379,285 @@ def dashboard():
 @app.route("/chatbot")
 @login_required
 def chatbot():
+    # Clear conversation state on refresh so a new session starts
+    session.pop("selected_farm_id", None)
+    session.pop("selected_farm_introduced", None)
+    session.pop("general_started", None)
+    session.pop("general_question_asked", None)
     now = datetime.now()
     return render_template("chatbot.html", now=now)
 
+# ------------------------------
+# Chatbot Conversation Endpoint
+# ------------------------------
 @app.route("/get_response", methods=["POST"])
 @login_required
 def get_response():
+    import re
     data = request.get_json()
     user_message = data.get("message", "")
+    lower_message = user_message.lower().strip()
     image_base64 = data.get("image", None)
-    image_type = data.get("image_type", "image/jpeg")  # default to JPEG if not provided
-
-    # Construct the text prompt
-    text_prompt = f"You are an expert agriculture specialist named Agriana Agco (nicknamed Aggie).\n{user_message}"
+    image_type = data.get("image_type", "image/jpeg")
     
-    # Build the messages content array:
-    message_content = [{"type": "text", "text": text_prompt}]
+    # ------------------------------
+    # Get Dynamic List of Farms for Current User
+    # ------------------------------
+    user_id = 1  # In production, use session user id
+    farms = get_user_farms(user_id)
+    available_farms = {str(farm["id"]): farm["name"] for farm in farms}
+    farms_list = "\n".join(available_farms.values())
+    
+    # ------------------------------
+    # Determine Conversation Mode
+    # ------------------------------
+    # If a general conversation is already in progress, use that branch.
+    if session.get("general_started"):
+        scenario = "general"
+    # Else if a specific farm is already selected, use specific branch.
+    elif session.get("selected_farm_id"):
+        scenario = "specific"
+    else:
+        # First, check if the user's message exactly matches any available farm names.
+        matched_farm = None
+        for farm_id, farm_name in available_farms.items():
+            if farm_name.lower() == lower_message:
+                matched_farm = farm_id
+                break
+        if matched_farm:
+            session["selected_farm_id"] = matched_farm
+            session["selected_farm_introduced"] = False
+            scenario = "specific"
+        # If not an exact match, check for greetings.
+        elif any(greet in lower_message for greet in ["hey", "hi", "hello"]):
+            return jsonify({"response": "Hello! Would you like general agriculture advice or specific recommendations for one of your farms? Please reply with 'general' for general advice or 'specific' for farm-specific recommendations."})
+        # Check if the user mentions 'specific'
+        elif "specific" in lower_message:
+            # If a farm name isn’t included, list available farms dynamically.
+            if not any(farm.lower() in lower_message for farm in available_farms.values()):
+                return jsonify({"response": "Please choose a farm from the following list for specific recommendations:\n" + farms_list})
+            # If the message includes one of the farm names along with "specific", set that farm.
+            for farm_id, farm_name in available_farms.items():
+                if farm_name.lower() in lower_message:
+                    session["selected_farm_id"] = farm_id
+                    session["selected_farm_introduced"] = False
+                    scenario = "specific"
+                    break
+            if not session.get("selected_farm_id"):
+                return jsonify({"response": "I couldn't match that farm. Please choose from the list:\n" + farms_list})
+        elif "general" in lower_message:
+            session["general_started"] = True
+            scenario = "general"
+        else:
+            return jsonify({"response": "Would you like general agriculture advice or specific recommendations for one of your farms? Please reply with 'general' or 'specific'."})
+    
+    # ------------------------------
+    # Build the Prompt Based on the Scenario
+    # ------------------------------
+    prompt_template = ""
+    if scenario == "general":
+        # Ask a clarifying question only on the first general query.
+        if not session.get("general_question_asked"):
+            session["general_question_asked"] = True
+            prompt_template = (
+                "Let's talk about general agriculture topics. What specific question or topic would you like to discuss? "
+                "For example, you can ask about crop production, soil management, or market trends in Illinois and North Dakota."
+            )
+            return jsonify({"response": prompt_template})
+        else:
+            prompt_template = "User Query: {user_message}".format(user_message=user_message)
+    
+    elif scenario == "specific":
+        # Retrieve dynamic farm data.
+        selected_farm_id = session.get("selected_farm_id")
+        # Find the farm in our dynamic list.
+        farm = None
+        for f in farms:
+            if str(f["id"]) == selected_farm_id:
+                farm = f
+                break
+        if farm:
+            # Build farm details.
+            farm_info = (
+                f"Farm Name: {farm['name']}\n"
+                f"State: {farm['state']}\n"
+                f"Coordinates: ({farm['latitude']}, {farm['longitude']})\n"
+                f"Description: {farm['description']}\n"
+            )
+            # Here you might also want to list equipment dynamically.
+            # For demonstration, we assume equipment info is not dynamic.
+            if selected_farm_id == "1":
+                equipment_info = "Equipment Available: Tractor, Combine\n"
+            elif selected_farm_id == "2":
+                equipment_info = "Equipment Available: Plow, Harvester\n"
+            else:
+                equipment_info = ""
+            
+            # Fetch daily forecast (for next 7 days).
+            forecast_info = ""
+            try:
+                weather_daily = get_weather(farm["latitude"], farm["longitude"], forecast_type="daily")
+                daily_data = weather_daily.get("daily", {})
+                if daily_data:
+                    forecast_info += "Weather Forecast for the Next 7 Days:\n"
+                    count = 0
+                    for date, tmax, tmin, precip, wind in zip(
+                        daily_data.get("time", []),
+                        daily_data.get("temperature_2m_max", []),
+                        daily_data.get("temperature_2m_min", []),
+                        daily_data.get("precipitation_sum", []),
+                        daily_data.get("wind_speed_10m_max", [])
+                    ):
+                        forecast_info += (
+                            f"Date: {date}, Temp: {tmin}°C - {tmax}°C, "
+                            f"Precipitation: {precip}mm, Wind: {wind} km/h\n"
+                        )
+                        count += 1
+                        if count >= 7:
+                            break
+                else:
+                    forecast_info += "No daily forecast data available.\n"
+            except Exception as e:
+                forecast_info += f"Error retrieving daily forecast data: {str(e)}\n"
+            
+            # Add state-specific context.
+            state_lower = farm["state"].lower()
+            if "illinois" in state_lower:
+                farm_context = (
+                    "Regional Context (Illinois):\n"
+                    "- Consider minimal tillage to reduce soil erosion due to periodic dust storms.\n"
+                    "- Cover crops and soil conservation practices are recommended.\n"
+                    "- AI recommendation: Evaluate no-till options if moisture is adequate."
+                )
+            elif "north dakota" in state_lower:
+                farm_context = (
+                    "Regional Context (North Dakota):\n"
+                    "- Soil moisture and composition are critical; consider no-till or strip-till practices.\n"
+                    "- Equipment cleaning is important to prevent soil compaction.\n"
+                    "- AI recommendation: Use precision agriculture techniques to optimize inputs."
+                )
+            else:
+                farm_context = f"Regional context for {farm['state']} is not specifically defined."
+            
+            if not session.get("selected_farm_introduced"):
+                prompt_template = (
+                    "Great, let's talk about this farm!\n\n"
+                    "Here are the details:\n"
+                    "{farm_info}\n"
+                    "{equipment_info}"
+                    "{forecast_info}\n"
+                    "{farm_context}\n\n"
+                    "Based on the above conditions for the next week, would you like to know my recommendation "
+                    "or do you have a specific question about this farm?\n"
+                    "User Query: {user_message}"
+                ).format(
+                    farm_info=farm_info,
+                    equipment_info=equipment_info,
+                    forecast_info=forecast_info,
+                    farm_context=farm_context,
+                    user_message=user_message
+                )
+                session["selected_farm_introduced"] = True
+            else:
+                prompt_template = (
+                    "Recall we are discussing the following farm:\n"
+                    "{farm_info}\n"
+                    "{equipment_info}"
+                    "{forecast_info}\n"
+                    "{farm_context}\n\n"
+                    "Please answer the following question based on the above conditions: {user_message}"
+                ).format(
+                    farm_info=farm_info,
+                    equipment_info=equipment_info,
+                    forecast_info=forecast_info,
+                    farm_context=farm_context,
+                    user_message=user_message
+                )
+        else:
+            prompt_template = (
+                "That farm doesn't exist. Please choose a valid option from the list:\n" + farms_list +
+                "\n\nUser Query: {user_message}"
+            ).format(user_message=user_message)
+    
+    else:
+        prompt_template = (
+            "Would you like general agriculture advice or specific recommendations for one of your farms? "
+            "Please reply with 'general' or 'specific'.\n\n"
+            "User Query: {user_message}"
+        ).format(user_message=user_message)
+    
+    # ------------------------------
+    # Build the Message for the AI Model
+    # ------------------------------
+    message_content = [{"type": "text", "text": prompt_template}]
     if image_base64:
         image_data_url = f"data:{image_type};base64,{image_base64}"
         message_content.append({
             "type": "image_url",
             "image_url": {"url": image_data_url, "detail": "auto"}
         })
-
+    
     messages = [{"role": "user", "content": message_content}]
     
     try:
-        # For now, we always use the gpt_40 model.
         selected_model = endpoints["gpt_40"]
-        
         response = client.chat.completions.create(
             model=selected_model,
             messages=messages,
-            max_completion_tokens=300,
+            max_completion_tokens=1000,
         )
-        
         app.logger.debug("AzureOpenAI API response for model %s: %s", selected_model, response)
-        print("DEBUG: API response for model", selected_model, ":", response)
-        
         message_content_response = None
         if response.choices and hasattr(response.choices[0], "message"):
             message_content_response = response.choices[0].message.content
         else:
-            app.logger.debug("Response structure unexpected for model %s: %s", selected_model, response)
-            print("DEBUG: Unexpected response structure for model", selected_model, ":", response)
-        
+            app.logger.debug("Unexpected response structure for model %s: %s", selected_model, response)
         if not message_content_response:
-            app.logger.debug("Blank text received in API response for model %s. Full response: %s", selected_model, response)
-            print("DEBUG: Blank text received for model", selected_model, "Full response:", response)
-        
-        # Use raw text without markdown conversion for voice output.
+            app.logger.debug("Blank text received in API response for model %s.", selected_model)
         final_response = message_content_response or ""
     except Exception as e:
         final_response = "Sorry, I encountered an error: " + str(e)
         app.logger.error("Error during API call: %s", e)
-        print("DEBUG: Exception occurred:", e)
     
-    # Return the response text; the client will handle speaking if enabled.
     return jsonify({"response": final_response})
+
+# ------------------------------
+# Speech-to-Text Route
+# ------------------------------
+@app.route("/speech_to_text", methods=["POST"])
+@login_required
+def speech_to_text():
+    data = request.get_json()
+    audio_base64 = data.get("audio", None)
+    if not audio_base64:
+        return jsonify({"error": "No audio provided"}), 400
+
+    # Decode the base64 audio data
+    audio_bytes = base64.b64decode(audio_base64)
+
+    # Convert the audio bytes to a WAV file using pydub
+    try:
+        audio_segment = AudioSegment.from_file(io.BytesIO(audio_bytes))
+        temp_filename = "temp_audio.wav"
+        audio_segment.export(temp_filename, format="wav")
+    except Exception as e:
+        return jsonify({"error": "Failed to process audio: " + str(e)}), 500
+
+    # Use SpeechRecognition to transcribe the audio
+    r = sr.Recognizer()
+    try:
+        with sr.AudioFile(temp_filename) as source:
+            audio_data = r.record(source)
+            text = r.recognize_google(audio_data)
+    except sr.UnknownValueError:
+        text = ""
+    except Exception as e:
+        text = ""
+    finally:
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
+
+    return jsonify({"text": text})
 
 if __name__ == "__main__":
     app.run(debug=True)
