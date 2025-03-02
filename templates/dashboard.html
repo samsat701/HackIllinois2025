@@ -8,42 +8,46 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <header>
-        <div class="header-container">
-          <div class="logo-container">
-            <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
-            <div class="title-container">
-              <h1>AG-GO</h1>
-              <span class="logo-tagline">Agricultural Intelligence</span>
-            </div>
-          </div>
-          
-          <nav>
-            <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
-              <span class="nav-icon">🏠</span>
-              <span>Home</span>
-            </a>
-            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
-              <span class="nav-icon">📊</span>
-              <span>Weather Dashboard</span>
-            </a>
-            <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
-              <span class="nav-icon">💬</span>
-              <span>Chatbot</span>
-            </a>
-          </nav>
-    
-          <div class="user-profile" id="userProfile">
-            <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
-            <span class="user-name">admin</span>
-            <div class="dropdown-menu" id="userDropdown">
-              <a href="#" class="dropdown-item">Profile</a>
-              <a href="#" class="dropdown-item">Settings</a>
-              <a href="{{ url_for('logout') }}" class="dropdown-item logout">Logout</a>
-            </div>
-          </div>
+  <header>
+    <div class="header-container">
+      <div class="logo-container">
+        <!-- Using the hard-coded logo2 icon for branding -->
+        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="WinifyAI Logo" class="logo">
+        <div class="title-container">
+          <h1>AG-GO</h1>
+          <span class="logo-tagline">Agricultural Intelligence</span>
         </div>
-      </header>
+      </div>
+      <nav>
+        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+          </a>
+          <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <span class="nav-icon">📊</span>
+            <span>Weather Dashboard</span>
+          </a>
+          <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
+            <span class="nav-icon">💬</span>
+            <span>Chatbot</span>
+          </a>
+          <a href="{{ url_for('disease') }}" class="nav-link {% if request.endpoint == 'disease' %}active{% endif %}">
+            <span class="nav-icon">🌱</span>
+            <span>Disease Detection</span>
+          </a>
+      </nav>
+      <div class="user-profile" id="userProfile">
+        <!-- Hard-coded user icon -->
+        <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
+        <span class="user-name">admin</span>
+        <div class="dropdown-menu" id="userDropdown">
+          <a href="#" class="dropdown-item">Profile</a>
+          <a href="#" class="dropdown-item">Settings</a>
+          <a href="{{ url_for('logout') }}" class="dropdown-item logout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </header>
 
   <div class="container">
     {% if error %}
@@ -55,16 +59,14 @@
       <div class="farm-selection">
         <h2>Select Your Farm</h2>
         <div class="farm-buttons">
-          <!-- Active Farms: They update a hidden field when clicked -->
-          <button type="button" class="farm-button {% if selected_farm=='illinois' %}selected{% endif %}" data-farm="illinois">
+          <button type="button" class="farm-button {% if farm_name and 'Illinois' in farm_name %}selected{% endif %}" data-farm="illinois">
             <img src="{{ url_for('static', filename='icons/farm1.jpg') }}" alt="Illinois Farm">
             <span>Farm 1 - Illinois</span>
           </button>
-          <button type="button" class="farm-button {% if selected_farm=='north_dakota' %}selected{% endif %}" data-farm="north_dakota">
+          <button type="button" class="farm-button {% if farm_name and 'North Dakota' in farm_name %}selected{% endif %}" data-farm="north_dakota">
             <img src="{{ url_for('static', filename='icons/farm2.jpg') }}" alt="North Dakota Farm">
             <span>Farm 2 - North Dakota</span>
           </button>
-          <!-- Disabled Farms -->
           <button type="button" class="farm-button disabled">
             <img src="{{ url_for('static', filename='icons/farm3.jpg') }}" alt="Oregon Farm">
             <span>Farm 3 - Oregon</span>
@@ -76,20 +78,18 @@
         </div>
       </div>
       <!-- Hidden input to store the selected farm -->
-      <input type="hidden" name="farm" id="farm-input" value="{{ selected_farm or '' }}">
+      <input type="hidden" name="farm" id="farm-input" value="">
 
       <!-- Forecast Type Section -->
       <div class="form-section">
         <label for="forecast_type">Choose forecast type:</label>
         <div class="radio-group">
           <div class="radio-option">
-            <input type="radio" id="hourly" name="forecast_type" value="hourly" required
-                   {% if forecast_type == 'hourly' %} checked {% endif %}>
+            <input type="radio" id="hourly" name="forecast_type" value="hourly" required {% if forecast_type == 'hourly' %}checked{% endif %}>
             <label for="hourly">Hourly Forecast (Next 24 Hours)</label>
           </div>
           <div class="radio-option">
-            <input type="radio" id="daily" name="forecast_type" value="daily"
-                   {% if forecast_type == 'daily' %} checked {% endif %}>
+            <input type="radio" id="daily" name="forecast_type" value="daily" {% if forecast_type == 'daily' %}checked{% endif %}>
             <label for="daily">Daily Forecast (Next 7 Days)</label>
           </div>
         </div>
@@ -114,71 +114,50 @@
       <div class="forecast-data">
         {% if forecast_type == "hourly" %}
           <h2>Hourly Forecast (Next 24 Hours)</h2>
-          <div class="table-container">
-            <table>
-              <tr>
-                <th>Time</th>
-                <th>Temp (°C)</th>
-                <th>RH (%)</th>
-                <th>Dew Pt (°C)</th>
-                <th>Prec (mm)</th>
-                <th>P%</th>
-                <th>Rain (mm)</th>
-                <th>Showers (mm)</th>
-                <th>Snow (mm)</th>
-                <th>WCode</th>
-                <th>Icon</th>
-                <th>SoilT0 (°C)</th>
-                <th>SoilM0</th>
-                <th>Wind (km/h)</th>
-                <th>WGust (km/h)</th>
-              </tr>
-              {% for entry in forecast_data %}
-              <tr>
-                <td>{{ entry.time }}</td>
-                <td>{{ entry.temperature }}</td>
-                <td>{{ entry.relative_humidity }}</td>
-                <td>{{ entry.dew_point }}</td>
-                <td>{{ entry.precipitation }}</td>
-                <td>{{ entry.precip_prob }}</td>
-                <td>{{ entry.rain }}</td>
-                <td>{{ entry.showers }}</td>
-                <td>{{ entry.snowfall }}</td>
-                <td>{{ entry.weathercode }}</td>
-                <td>
-                  <img class="icon" src="{{ url_for('static', filename='icons/' ~ entry.weather_icon) }}" alt="Icon">
-                </td>
-                <td>{{ entry.soil_temperature_0 }}</td>
-                <td>{{ entry.soil_moisture_0 }}</td>
-                <td>{{ entry.wind_speed }}</td>
-                <td>{{ entry.wind_gusts }}</td>
-              </tr>
-              {% endfor %}
-            </table>
+          <div class="forecast-scroll-container">
+            {% for entry in forecast_data %}
+              <div class="forecast-card">
+                <div class="time">{{ entry.time }}</div>
+                <!-- Extract hour from a datetime string "YYYY-MM-DD HH:MM" using positions 11 to 13 -->
+                {% set hour = entry.time[11:13] | int %}
+                {% if hour >= 6 and hour < 18 %}
+                  <img class="icon" src="{{ url_for('static', filename='icons/night-mode.png') }}" alt="Night Mode Icon">
+                {% else %}
+                  <img class="icon" src="{{ url_for('static', filename='icons/' ~ entry.weather_icon) }}" alt="Weather Icon">
+                {% endif %}
+                <div class="temp">{{ entry.temperature }}°C</div>
+                <div class="details">
+                  <div>RH: {{ entry.relative_humidity }}%</div>
+                  <div>Dew Pt: {{ entry.dew_point }}°C</div>
+                  <div>Precip: {{ entry.precipitation }}mm</div>
+                  <div>P%: {{ entry.precip_prob }}%</div>
+                  <div>Wind: {{ entry.wind_speed }}km/h</div>
+                  <div>Soil T: {{ entry.soil_temperature_0 }}°C</div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
         {% elif forecast_type == "daily" %}
           <h2>Daily Forecast (Next 7 Days)</h2>
-          <div class="table-container">
-            <table>
-              <tr>
-                <th>Date</th>
-                <th>Max Temp (°C)</th>
-                <th>Min Temp (°C)</th>
-                <th>Precip (mm)</th>
-                <th>Max Wind (km/h)</th>
-                <th>UV Index</th>
-              </tr>
-              {% for entry in forecast_data %}
-              <tr>
-                <td>{{ entry.date }}</td>
-                <td class="{% if entry.temp_max > 30 %}temp-high{% endif %}">{{ entry.temp_max }}</td>
-                <td class="{% if entry.temp_min < 5 %}temp-low{% endif %}">{{ entry.temp_min }}</td>
-                <td class="{% if entry.precipitation_sum > 10 %}precip-high{% endif %}">{{ entry.precipitation_sum }}</td>
-                <td>{{ entry.wind_speed_max }}</td>
-                <td>{{ entry.uv_index }}</td>
-              </tr>
-              {% endfor %}
-            </table>
+          {% set icons = ['sun.png', 'snow.png', 'partly_cloudy.png', 'drizzle.png'] %}
+          <div class="forecast-scroll-container">
+            {% for entry in forecast_data %}
+              <div class="forecast-card daily-forecast-card">
+                <div class="date">{{ entry.date }}</div>
+                <img class="icon" src="{{ url_for('static', filename='icons/' ~ icons|random) }}" alt="Weather Icon">
+                <div class="temp-range">
+                  <span class="{% if entry.temp_max > 30 %}temp-high{% endif %}">{{ entry.temp_max }}°</span> /
+                  <span class="{% if entry.temp_min < 5 %}temp-low{% endif %}">{{ entry.temp_min }}°</span>
+                </div>
+                <div class="details">
+                  <div class="{% if entry.precipitation_sum > 10 %}precip-high{% endif %}">
+                    Precip: {{ entry.precipitation_sum }}mm
+                  </div>
+                  <div>Wind: {{ entry.wind_speed_max }}km/h</div>
+                  <div>UV: {{ entry.uv_index }}</div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
         {% endif %}
       </div>
@@ -191,45 +170,34 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-      // JavaScript to handle active farm button selection
+      // Handle active farm button selection
       const farmButtons = document.querySelectorAll('.farm-button');
       const farmInput = document.getElementById('farm-input');
-
       farmButtons.forEach(button => {
         if (!button.classList.contains('disabled')) {
           button.addEventListener('click', function() {
-            // Remove "selected" class from all active farm buttons
             farmButtons.forEach(btn => {
               if (!btn.classList.contains('disabled')) {
                 btn.classList.remove('selected');
               }
             });
-            // Add "selected" class to the clicked button and update the hidden input
             this.classList.add('selected');
-            const selectedFarm = this.getAttribute('data-farm');
-            console.log("Selected farm:", selectedFarm); // Debug log
-            farmInput.value = selectedFarm;
+            farmInput.value = this.getAttribute('data-farm');
           });
         }
       });
     });
 
-    // User profile dropdown functionality
     document.addEventListener('DOMContentLoaded', function() {
       const userProfile = document.getElementById('userProfile');
       const dropdown = document.getElementById('userDropdown');
-      
       userProfile.addEventListener('click', function(e) {
         e.stopPropagation();
         dropdown.classList.toggle('show');
       });
-      
-      // Close dropdown when clicking elsewhere
       document.addEventListener('click', function() {
         dropdown.classList.remove('show');
       });
-      
-      // Prevent dropdown from closing when clicking inside it
       dropdown.addEventListener('click', function(e) {
         e.stopPropagation();
       });

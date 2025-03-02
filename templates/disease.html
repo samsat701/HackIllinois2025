@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AG-GO | Plant Disease Detection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    .disease-container {
+      max-width: 800px;
+      margin: 30px auto;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 25px;
+    }
+    
+    .upload-section {
+      border: 2px dashed #3498db;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      margin-bottom: 30px;
+      background-color: rgba(52, 152, 219, 0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .upload-section:hover {
+      background-color: rgba(52, 152, 219, 0.1);
+    }
+    
+    .upload-icon {
+      font-size: 48px;
+      color: #3498db;
+      margin-bottom: 15px;
+    }
+    
+    .upload-text {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+    
+    .file-formats {
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+    
+    .upload-btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .upload-btn:hover {
+      background-color: #2980b9;
+    }
+    
+    /* Result section now uses vertical stacking */
+    .result-section {
+  display: flex;
+  flex-direction: column;
+  margin-top: 30px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  position: relative;
+}
+    
+.image-preview {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  width: 100%;
+}
+
+    
+    .preview-img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .result-details {
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      border-left: 4px solid #3498db;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .result-title {
+      margin-top: 0;
+      color: #2c3e50;
+      font-size: 1.3rem;
+    }
+    
+    .disease-name {
+      color: #e74c3c;
+      font-weight: 600;
+      font-size: 1.3rem;
+      margin: 10px 0;
+      padding: 8px 12px;
+      background-color: #fef2f2;
+      border-radius: 6px;
+      display: inline-block;
+      border-left: 4px solid #e74c3c;
+    }
+    
+    .treatment-section {
+      margin-top: 15px;
+    }
+    
+    .treatment-title {
+      font-weight: 500;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+    
+    .breadcrumb {
+      display: flex;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: #7f8c8d;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    
+    .breadcrumb span {
+      margin: 0 8px;
+    }
+    
+    .hidden-file-input {
+      display: none;
+    }
+    
+    .camera-btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-left: 10px;
+    }
+    
+    .camera-btn:hover {
+      background-color: #27ae60;
+    }
+    
+    .history-section {
+      margin-top: 30px;
+    }
+    
+    .history-title {
+      color: #2c3e50;
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    
+    .history-items {
+      display: flex;
+      overflow-x: auto;
+      gap: 15px;
+      padding-bottom: 10px;
+    }
+    
+    .history-item {
+      min-width: 100px;
+      max-width: 100px;
+      text-align: center;
+    }
+    
+    .history-img {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .history-img:hover {
+      transform: scale(1.05);
+    }
+    
+    .history-label {
+      font-size: 0.8rem;
+      color: #7f8c8d;
+      margin-top: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='icons/logo2.png') }}" alt="AG-GO Logo" class="logo">
+        <div class="title-container">
+          <h1>AG-GO</h1>
+          <span class="logo-tagline">Agricultural Intelligence</span>
+        </div>
+      </div>
+      <nav>
+        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <span class="nav-icon">📊</span>
+          <span>Weather Dashboard</span>
+        </a>
+        <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
+          <span class="nav-icon">💬</span>
+          <span>Chatbot</span>
+        </a>
+        <a href="{{ url_for('disease') }}" class="nav-link active">
+          <span class="nav-icon">🌱</span>
+          <span>Disease Detection</span>
+        </a>
+      </nav>
+      <div class="user-profile" id="userProfile">
+        <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">
+        <span class="user-name">admin</span>
+        <div class="dropdown-menu" id="userDropdown">
+          <a href="#" class="dropdown-item">Profile</a>
+          <a href="#" class="dropdown-item">Settings</a>
+          <a href="{{ url_for('logout') }}" class="dropdown-item logout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{{ url_for('home') }}">Home</a>
+      <span>›</span>
+      <a href="{{ url_for('disease') }}">Disease Detection</a>
+    </div>
+    
+    <div class="disease-container">
+      <h2>Plant Disease Detection</h2>
+      <p>Upload images of your crops to identify potential diseases and get treatment recommendations.</p>
+      
+      <form action="{{ url_for('disease') }}" method="post" enctype="multipart/form-data">
+        <div class="upload-section" id="dropArea">
+          <div class="upload-icon">📷</div>
+          <p class="upload-text">Drag and drop your image here or use the buttons below</p>
+          <input type="file" name="image" id="fileInput" accept="image/*" class="hidden-file-input">
+          <button type="button" class="upload-btn" onclick="document.getElementById('fileInput').click()">Select Image</button>
+          <button type="button" class="camera-btn" id="cameraBtn">Take Photo</button>
+          <p class="file-formats">Supported formats: JPG, PNG, JPEG (max 10MB)</p>
+        </div>
+        <div id="submitBtnContainer" style="text-align: center; display: none;">
+          <button type="submit" class="upload-btn">Analyze Image</button>
+        </div>
+      </form>
+      
+      <div class="result-section">
+        <div class="image-preview">
+          {% if image_url %} <img src="{{ image_url }}" alt="Uploaded plant image" class="preview-img">
+          {% endif %}
+        </div>
+        <div class="result-details">
+          <h3 class="result-title">Analysis Result</h3>
+          {% if prediction %}
+            <p class="disease-name">{{ prediction }}</p>
+            <div class="treatment-section">
+              <p class="treatment-title">Recommended Treatment:</p>
+              <ul>
+                <li>Isolate affected plants to prevent spread</li>
+                <li>Apply appropriate fungicide or treatment</li>
+                <li>Improve air circulation around plants</li>
+                <li>Adjust watering practices to avoid leaf wetness</li>
+              </ul>
+              <p><a href="#" style="color: #3498db;">Learn more about this disease</a></p>
+            </div>
+          {% else %}
+            <p>No disease detected or analysis not yet performed.</p>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="history-section">
+        <h3 class="history-title">Recent Analyses</h3>
+        <div class="history-items">
+          <!-- These would be dynamically populated in a real implementation -->
+          <div class="history-item">
+            <img src="{{ url_for('static', filename='icons/Apple___Black_rot.jpg') }}" alt="History item" class="history-img">
+            <p class="history-label">Appe - Black Rot</p>
+          </div>
+          <div class="history-item">
+            <img src="{{ url_for('static', filename='icons/Blueberry___healthy.jpg') }}" alt="History item" class="history-img">
+            <p class="history-label">Blueberry - Healthy</p>
+          </div>
+          <div class="history-item">
+            <img src="{{ url_for('static', filename='icons/Cherry_(including_sour)___healthy.jpg') }}" alt="History item" class="history-img">
+            <p class="history-label">Healthy</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    <p>AG-GO Agricultural Intelligence &copy; {{ now.year }}</p>
+  </footer>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const userProfile = document.getElementById('userProfile');
+      const dropdown = document.getElementById('userDropdown');
+      const fileInput = document.getElementById('fileInput');
+      const dropArea = document.getElementById('dropArea');
+      const submitBtnContainer = document.getElementById('submitBtnContainer');
+      
+      // User profile dropdown functionality
+      userProfile.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+      });
+      
+      // Close dropdown when clicking elsewhere
+      document.addEventListener('click', function() {
+        dropdown.classList.remove('show');
+      });
+      
+      // Prevent dropdown from closing when clicking inside it
+      dropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+      
+      // File input change handler
+      fileInput.addEventListener('change', function() {
+        if (fileInput.files.length > 0) {
+          submitBtnContainer.style.display = 'block';
+          dropArea.style.borderColor = '#2ecc71';
+          
+          // Preview the selected image
+          const file = fileInput.files[0];
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const previewSection = document.querySelector('.result-section');
+            const previewImg = document.querySelector('.preview-img');
+            
+            if (previewImg) {
+              previewImg.src = e.target.result;
+            } else {
+              const imagePreview = document.createElement('div');
+              imagePreview.className = 'image-preview';
+              
+              const img = document.createElement('img');
+              img.src = e.target.result;
+              img.className = 'preview-img';
+              
+              imagePreview.appendChild(img);
+              previewSection.appendChild(imagePreview);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      
+      // Drag and drop functionality
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+      });
+      
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+      });
+      
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+      });
+      
+      function highlight() {
+        dropArea.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
+        dropArea.style.borderColor = '#3498db';
+      }
+      
+      function unhighlight() {
+        dropArea.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+        dropArea.style.borderColor = '#3498db';
+      }
+      
+      dropArea.addEventListener('drop', handleDrop, false);
+      
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        
+        // Trigger the change event manually
+        const event = new Event('change');
+        fileInput.dispatchEvent(event);
+      }
+      
+      // Camera functionality for mobile devices
+      const cameraBtn = document.getElementById('cameraBtn');
+      cameraBtn.addEventListener('click', function() {
+        // Check if the device has a camera
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          fileInput.setAttribute('capture', 'environment');
+          fileInput.click();
+        } else {
+          alert('Your device does not support camera access or it is disabled.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

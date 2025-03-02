@@ -17,9 +17,21 @@
       </div>
       <nav>
         <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
-          <span class="nav-icon">🏠</span>
-          <span>Home</span>
-        </a>
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+          </a>
+          <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <span class="nav-icon">📊</span>
+            <span>Weather Dashboard</span>
+          </a>
+          <a href="{{ url_for('chatbot') }}" class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}">
+            <span class="nav-icon">💬</span>
+            <span>Chatbot</span>
+          </a>
+          <a href="{{ url_for('disease') }}" class="nav-link {% if request.endpoint == 'disease' %}active{% endif %}">
+            <span class="nav-icon">🌱</span>
+            <span>Disease Detection</span>
+          </a>
       </nav>
       <div class="user-profile" id="userProfile">
         <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Image" class="user-image">

@@ -2,28 +2,256 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login - WinifyAI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AC-GO</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Deep green */
+            --secondary-color: #388e3c; /* Medium green */
+            --accent-color: #43a047; /* Light green */
+            --light-green: #e8f5e9; /* Very light green */
+            --text-color: #333;
+            --light-gray: #f5f7fa;
+            --error-color: #d32f2f;
+            --success-color: #388e3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-container {
+            margin-bottom: 20px;
+            text-align: center;
+            transform: translateX(-10px); /* Move logo 30px to the left */
+        }
+        
+        .logo {
+            max-width: 120px;
+            height: auto;
+        }
+        
+        .login-container {
+            width: 400px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 0;
+        }
+        
+        .login-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .login-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .login-form {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            padding-left: 40px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.15);
+        }
+        
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 39px;
+            color: var(--secondary-color);
+        }
+        
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+        
+        .remember-me input {
+            margin-right: 8px;
+        }
+        
+        .forgot-password a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .login-button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .signup-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+        
+        .signup-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .flashes {
+            list-style-type: none;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 6px;
+            background-color: rgba(211, 47, 47, 0.1);
+            color: var(--error-color);
+            font-size: 14px;
+        }
+        
+        .flashes li {
+            margin-bottom: 5px;
+        }
+        
+        .flashes li:last-child {
+            margin-bottom: 0;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                width: 90%;
+            }
+            
+            .logo-container {
+                transform: translateX(0); /* Reset on mobile */
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-      <h2>Login</h2>
-      <form method="post">
-          <label for="username">Username:</label>
-          <input type="text" name="username" required>
-          <label for="password">Password:</label>
-          <input type="password" name="password" required>
-          <button type="submit">Login</button>
-      </form>
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <ul class="flashes">
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-          </ul>
-        {% endif %}
-      {% endwith %}
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='/icons/logo2.png') }}" alt="AC-GO Logo" class="logo">
+    </div>
+    
+    <div class="login-container">
+        <div class="login-header">
+            <h1>AC-GO</h1>
+            <p>Sign in to your account</p>
+        </div>
+        
+        <div class="login-form">
+            <form method="post">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="remember-forgot">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Remember me</label>
+                    </div>
+                    <div class="forgot-password">
+                        <a href="#">Forgot password?</a>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-button">Sign In</button>
+                
+                <div class="signup-link">
+                    Don't have an account? <a href="#">Sign up</a>
+                </div>
+            </form>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul class="flashes">
+                    {% for message in messages %}
+                        <li><i class="fas fa-exclamation-circle"></i> {{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
     </div>
 </body>
 </html>

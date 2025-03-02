@@ -33,6 +33,10 @@
           <span class="nav-icon">💬</span>
           <span>Chatbot</span>
         </a>
+        <a href="{{ url_for('disease') }}" class="nav-link {% if request.endpoint == 'disease' %}active{% endif %}">
+          <span class="nav-icon">🌱</span>
+          <span>Disease Detection</span>
+        </a>
       </nav>
   
       <div class="user-profile" id="userProfile">
