@@ -77,3 +77,4 @@ To get started with AG-GO, clone the repository and follow the installation inst
 ```bash
 git clone https://github.com/yourusername/AG-GO.git
 cd AG-GO
+pip install -r requirements.txt
