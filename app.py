@@ -10,6 +10,12 @@ import speech_recognition as sr
 from pydub import AudioSegment
 
 from openai import AzureOpenAI
+import tensorflow as tf
+import pickle
+from PIL import Image
+import numpy as np
+import traceback
+from werkzeug.utils import secure_filename
 
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "{API KEY HERE}")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "https://your-openai-endpoint.openai.azure.com")
@@ -376,6 +382,48 @@ def dashboard():
                            farm_name=farm_name,
                            now=now)
 
+img_size = 224
+
+model_path = os.path.join(os.getcwd(), "plant_disease_prediction_model.h5")
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"Model file not found at: {model_path}")
+disease_model = tf.keras.models.load_model(model_path)
+
+class_indices_path = os.path.join(os.getcwd(), "class_indices.pkl")
+if not os.path.exists(class_indices_path):
+    raise FileNotFoundError(f"Class indices file not found at: {class_indices_path}")
+with open(class_indices_path, "rb") as f:
+    class_indices = pickle.load(f)
+
+# Determine mapping orientation:
+first_key = next(iter(class_indices))
+if str(first_key).isdigit():
+    class_indices = {int(k): v for k, v in class_indices.items()}
+else:
+    class_indices = {int(v): k for k, v in class_indices.items()}
+
+print("DEBUG: Loaded class_indices mapping:", class_indices)
+
+def load_and_preprocess_image_from_file(file, target_size=(img_size, img_size)):
+    try:
+        img = Image.open(file).convert("RGB")
+        img = img.resize(target_size)
+        img_array = np.array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = img_array.astype("float32") / 255.0
+        return img_array
+    except Exception as e:
+        traceback.print_exc()
+        raise e
+
+def predict_disease_from_file(file):
+    preprocessed_img = load_and_preprocess_image_from_file(file, target_size=(img_size, img_size))
+    predictions = disease_model.predict(preprocessed_img)
+    predicted_class_index = np.argmax(predictions, axis=1)[0]
+    if predicted_class_index not in class_indices:
+        raise KeyError(f"Predicted index {predicted_class_index} not found in class_indices. Full mapping: {class_indices}")
+    return class_indices[predicted_class_index]
+
 @app.route("/chatbot")
 @login_required
 def chatbot():
@@ -386,6 +434,35 @@ def chatbot():
     session.pop("general_question_asked", None)
     now = datetime.now()
     return render_template("chatbot.html", now=now)
+
+@app.route("/disease", methods=["GET", "POST"])
+@login_required
+def disease():
+    now = datetime.now()
+    prediction = None
+    image_url = None
+
+    if request.method == "POST":
+        file = request.files.get("image")
+        if file:
+            try:
+                filename = secure_filename(file.filename)
+                # Ensure the upload directory exists
+                os.makedirs(os.path.join("static", "uploads"), exist_ok=True)
+                save_path = os.path.join("static", "uploads", filename)
+                file.save(save_path)
+
+                with open(save_path, "rb") as f:
+                    prediction = predict_disease_from_file(f)
+
+                image_url = url_for("static", filename=f"uploads/{filename}")
+            except Exception as e:
+                traceback.print_exc()
+                prediction = f"Error processing image: {str(e)}"
+        else:
+            prediction = "No image uploaded."
+
+    return render_template("disease.html", now=now, prediction=prediction, image_url=image_url)
 
 # ------------------------------
 # Chatbot Conversation Endpoint
