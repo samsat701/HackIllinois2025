@@ -1,1 +1,1 @@
-# AG-GO
+# AG-GO: AI-Powered Farm Management
